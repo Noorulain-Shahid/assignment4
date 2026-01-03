@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shopping Cart - Trendy Wear</title>
+    <link rel="icon" type="image/png" href="images/logo.png">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+    <!-- NAVIGATION BAR -->
+    <nav class="navbar navbar-expand-lg navbar-light bg-white fixed-top shadow-sm" id="navbar">
+        <div class="container-fluid px-4">
+            <a class="navbar-brand d-flex align-items-center" href="Home.html">
+                <img src="images/logo.png" alt="Trendy Wear Logo" class="logo me-3" height="85">
+                <span class="brand-name">Trendy Wear</span>
+            </a>
+            <div class="permanent-icons d-flex align-items-center gap-2">
+                <a href="orders.html" class="nav-link permanent-icon d-flex align-items-center gap-2">
+                    <i class="fas fa-box"></i>
+                    <span>My Orders</span>
+                </a>
+                <a href="cart.html" class="nav-link permanent-icon d-flex align-items-center gap-2 active">
+                    <i class="fas fa-shopping-cart"></i>
+                    <span>Cart</span>
+                    <span class="badge bg-secondary cart-count ms-1" id="cartCount">0</span>
+                </a>
+            </div>
+            
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav nav-menu-hidden mx-auto" id="navMenu">
+                    <li class="nav-item"><a href="Home.html" class="nav-link">Home</a></li>
+                    <li class="nav-item"><a href="about.html" class="nav-link">About Us</a></li>
+                    <li class="nav-item nav-item-dropdown">
+                        <a href="products.html" class="nav-link">
+                            Products <i class="fas fa-chevron-down dropdown-arrow"></i>
+                        </a>
+                        <ul class="products-dropdown">
+                            <li><a href="products.html?search=cargo">Cargo Pant</a></li>
+                            <li><a href="products.html?search=hat">Hat</a></li>
+                            <li><a href="products.html?search=hoodie">Hoodie</a></li>
+                            <li><a href="products.html?search=jacket">Jacket</a></li>
+                            <li><a href="products.html?search=sweater">Sweater</a></li>
+                            <li><a href="products.html?search=sweatshirt">Sweatshirt</a></li>
+                        </ul>
+                    </li>
+                    <li class="nav-item"><a href="contact.html" class="nav-link">Contact Us</a></li>
+                    <li class="nav-item"><a href="login.html" class="nav-link"><i class="fas fa-user"></i> Login</a></li>
+                </ul>
+            </div>
+            
+            <div class="menu-arrow-container">
+                <i class="fas fa-chevron-down menu-arrow"></i>
+            </div>
+        </div>
+    </nav>
+
+    <!-- PAGE HERO -->
+    <section class="cart-hero">
+        <div class="container">
+            <h1 class="page-title">Shopping Cart</h1>
+            <p class="page-subtitle">Review your items and proceed to checkout</p>
+        </div>
+    </section>
+<!-- CART DEBUG SECTION -->
+    <section class="cart-debug-section py-3" style="display:none;" id="cartDebug">
+        <div class="container">
+            <h4>Cart Image Debug</h4>
+            <p class="text-muted">Shows resolved image URLs and load status for each cart item.</p>
+            <div id="cartDebugList"></div>
+        </div>
+    </section>
+<!-- SHOPPING CART ITEMS AND SUMMARY -->
+    <section class="cart-section">
+        <div class="container">
+            <div class="cart-wrapper">
+                <div class="cart-items-container">
+                    <div id="cartItems">
+                    </div>
+                    
+                    <div id="emptyCart" class="empty-cart" style="display: none;">
+                        <i class="fas fa-shopping-cart"></i>
+                        <h3>Your cart is empty</h3>
+                        <p>Add some products to get started!</p>
+                        <a href="products.html" class="shop-now-btn">Shop Now</a>
+                    </div>
+                </div>
+
+                <div class="cart-summary" id="cartSummary">
+                    <h2>Order Summary</h2>
+
+                    <div id="checkoutNotice" class="checkout-notice" aria-live="polite"></div>
+
+                    <div id="summaryItems" class="summary-items">
+                    </div>
+                    
+                    <div class="summary-row">
+                        <span>Subtotal:</span>
+                        <span id="subtotal">$0.00</span>
+                    </div>
+                    
+                    <div class="summary-row">
+                        <span>Shipping:</span>
+                        <span id="shipping">$0.00</span>
+                    </div>
+                    
+                    <div class="summary-row">
+                        <span>Tax (10%):</span>
+                        <span id="tax">$0.00</span>
+                    </div>
+                    
+                    <div class="promo-code">
+                        <input type="text" id="promoCode" placeholder="Enter promo code">
+                        <button onclick="applyPromoCode()">Apply</button>
+                    </div>
+                    
+                    <div class="summary-row discount-row" id="discountRow" style="display: none;">
+                        <span>Discount:</span>
+                        <span id="discount" class="discount-amount">-$0.00</span>
+                    </div>
+                    
+                    <div class="summary-divider"></div>
+                    
+                    <div class="summary-row total-row">
+                        <span>Total:</span>
+                        <span id="total">PKR 0</span>
+                    </div>
+                    
+                    <div class="checkout-options">
+                        <h4>Payment Method</h4>
+                        <label class="payment-option">
+                            <input type="radio" name="payment" value="COD" aria-label="Cash on Delivery">
+                            <span class="payment-bullet" aria-hidden="true"></span>
+                            <span class="payment-icon"><i class="fas fa-money-bill-wave"></i></span>
+                            <span class="payment-text">Cash on Delivery</span>
+                        </label>
+
+                        <label class="payment-option">
+                            <input type="radio" name="payment" value="Card" aria-label="Credit or Debit Card">
+                            <span class="payment-bullet" aria-hidden="true"></span>
+                            <span class="payment-icon"><i class="far fa-credit-card"></i></span>
+                            <span class="payment-text">Credit / Debit Card</span>
+                        </label>
+
+                        <label class="payment-option">
+                            <input type="radio" name="payment" value="PayPal" aria-label="PayPal">
+                            <span class="payment-bullet" aria-hidden="true"></span>
+                            <span class="payment-icon"><i class="fab fa-paypal"></i></span>
+                            <span class="payment-text">PayPal</span>
+                        </label>
+                    </div>
+                    
+                    <button class="checkout-btn" onclick="proceedToCheckout()">
+                        <i class="fas fa-lock"></i> Proceed to Checkout
+                    </button>
+                    
+                    <button class="clear-cart-btn" onclick="clearCart()" title="Remove all items from cart">
+                        <i class="fas fa-trash-alt"></i> Clear Cart
+                    </button>
+
+                    <a href="products.html" class="continue-shopping">
+                        <i class="fas fa-arrow-left"></i> Continue Shopping
+                    </a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="shop-more-section py-5">
+        <div class="container">
+            <h2 class="section-title text-center mb-4">Shop More</h2>
+            <div class="row g-4" id="cartProducts">
+            </div>
+        </div>
+    <!-- FOOTER -->
+    </section>
+
+    <footer class="footer bg-dark text-white py-5">
+        <div class="container">
+            <div class="row g-4 footer-content">
+                <div class="col-lg-3 col-md-6 footer-section">
+                    <h3 class="h5 mb-3">About Trendy Wear</h3>
+                    <p class="text-white-50">Your destination for elegant and trendy fashion. We bring you the latest styles with premium quality.</p>
+                </div>
+                <div class="col-lg-3 col-md-6 footer-section">
+                    <h3 class="h5 mb-3">Quick Links</h3>
+                    <ul class="list-unstyled">
+                        <li class="mb-2"><a href="about.html" class="text-white-50 text-decoration-none">About Us</a></li>
+                        <li class="mb-2"><a href="contact.html" class="text-white-50 text-decoration-none">Contact Us</a></li>
+                    </ul>
+                </div>
+                <div class="col-lg-3 col-md-6 footer-section">
+                    <h3 class="h5 mb-3">Customer Service</h3>
+                    <ul class="list-unstyled">
+                        <li class="mb-2"><a href="#" class="text-white-50 text-decoration-none">Shipping Info</a></li>
+                        <li class="mb-2"><a href="#" class="text-white-50 text-decoration-none">Returns</a></li>
+                        <li class="mb-2"><a href="#" class="text-white-50 text-decoration-none">FAQ</a></li>
+                        <li class="mb-2"><a href="#" class="text-white-50 text-decoration-none">Size Guide</a></li>
+                    </ul>
+                </div>
+                <div class="col-lg-3 col-md-6 footer-section">
+                    <h3 class="h5 mb-3">Follow Us</h3>
+                    <div class="social-links d-flex gap-3">
+                        <a href="https://www.facebook.com" class="text-white fs-4"><i class="fab fa-facebook"></i></a>
+                        <a href="https://www.instagram.com" class="text-white fs-4"><i class="fab fa-instagram"></i></a>
+                        <a href="https://x.com" class="text-white fs-4"><i class="fab fa-twitter"></i></a>
+                        <a href="https://www.pinterest.com" class="text-white fs-4"><i class="fab fa-pinterest"></i></a>
+                    </div>
+                </div>
+            </div>
+            <hr class="my-4 bg-secondary">
+            <div class="footer-bottom text-center">
+                <p class="mb-0" style="color: var(--primary-beige);">&copy; 2025 Trendy Wear. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="js/script.js"></script>
+    <script src="js/cart.js"></script>
+</body>
+</html>

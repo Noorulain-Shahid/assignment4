@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>About Us - Trendy Wear</title>
+    <link rel="icon" type="image/png" href="images/logo.png">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+    <!-- NAVIGATION BAR -->
+    <nav class="navbar navbar-expand-lg navbar-light bg-white fixed-top shadow-sm" id="navbar">
+        <div class="container-fluid px-4">
+            <a class="navbar-brand d-flex align-items-center" href="Home.html">
+                <img src="images/logo.png" alt="Trendy Wear Logo" class="logo me-3" height="85">
+                <span class="brand-name">Trendy Wear</span>
+            </a>
+            <div class="permanent-icons d-flex align-items-center gap-2">
+                <a href="orders.html" class="nav-link permanent-icon d-flex align-items-center gap-2">
+                    <i class="fas fa-box"></i>
+                    <span>My Orders</span>
+                </a>
+                <a href="cart.html" class="nav-link permanent-icon d-flex align-items-center gap-2">
+                    <i class="fas fa-shopping-cart"></i>
+                    <span>Cart</span>
+                    <span class="badge bg-secondary cart-count ms-1" id="cartCount">0</span>
+                </a>
+            </div>
+            
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav nav-menu-hidden mx-auto" id="navMenu">
+                    <li class="nav-item"><a href="Home.html" class="nav-link">Home</a></li>
+                    <li class="nav-item"><a href="about.html" class="nav-link active">About Us</a></li>
+                    <li class="nav-item nav-item-dropdown">
+                        <a href="products.html" class="nav-link">
+                            Products <i class="fas fa-chevron-down dropdown-arrow"></i>
+                        </a>
+                        <ul class="products-dropdown">
+                            <li><a href="products.html?search=cargo">Cargo Pant</a></li>
+                            <li><a href="products.html?search=hat">Hat</a></li>
+                            <li><a href="products.html?search=hoodie">Hoodie</a></li>
+                            <li><a href="products.html?search=jacket">Jacket</a></li>
+                            <li><a href="products.html?search=sweater">Sweater</a></li>
+                            <li><a href="products.html?search=sweatshirt">Sweatshirt</a></li>
+                        </ul>
+                    </li>
+                    <li class="nav-item"><a href="contact.html" class="nav-link">Contact Us</a></li>
+                    <li class="nav-item"><a href="login.html" class="nav-link"><i class="fas fa-user"></i> Login</a></li>
+                </ul>
+            </div>
+            
+            <div class="menu-arrow-container">
+                <i class="fas fa-chevron-down menu-arrow"></i>
+            </div>
+        </div>
+    </nav>
+
+    <!-- ABOUT HERO SECTION -->
+    <section class="about-hero">
+        <div class="container">
+            <h1 class="page-title">About Trendy Wear</h1>
+            <p class="page-subtitle">Your Premium Winter Fashion Destination</p>
+        </div>
+    </section>
+
+    <!-- COMPANY STORY -->
+    <section class="company-story">
+        <div class="container">
+            <div class="story-content">
+                <div class="story-image">
+                    <img src="images/about us.png" alt="Our Story">
+                </div>
+                <div class="story-text">
+                    <h2>Our Story</h2>
+                    <p>Founded in 2023, Trendy Wear began with a passion for creating premium winter wear that combines warmth, style, and comfort. What started as a dream to bring cozy fashion to Pakistan has blossomed into a trusted destination for high-quality winter clothing for the entire family.</p>
+                    <p>We specialize in curating exclusive winter collections featuring luxurious sweaters, elegant coats, stylish jackets, and charming accessories like woolen caps, scarves, and gloves. Our carefully selected pieces ensure you stay warm while looking effortlessly fashionable throughout the cold season.</p>
+                    <p>From women's hooded trench coats and cable-knit sweaters to men's durable winter coats and adorable kids' winter sets, every item in our collection is chosen for its quality craftsmanship and timeless appeal. We believe winter fashion should be both functional and fabulous, keeping you cozy without compromising on style.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+<!-- MISSION AND VALUES -->
+    
+    <section class="mission-values">
+        <div class="container">
+            <h2 class="section-title">Our Mission & Values</h2>
+            <div class="values-grid">
+                <div class="value-card">
+                    <i class="fas fa-snowflake"></i>
+                    <h3>Premium Winter Wear</h3>
+                    <p>We specialize in high-quality winter clothing that keeps you warm, comfortable, and stylish throughout the cold season.</p>
+                </div>
+                <div class="value-card">
+                    <i class="fas fa-users"></i>
+                    <h3>For the Whole Family</h3>
+                    <p>From women's elegant coats to men's durable jackets and kids' adorable winter sets - we outfit everyone you love.</p>
+                </div>
+                <div class="value-card">
+                    <i class="fas fa-shield-alt"></i>
+                    <h3>Quality & Durability</h3>
+                    <p>Every sweater, coat, and accessory is selected for its superior fabric quality and long-lasting warmth.</p>
+                </div>
+                <div class="value-card">
+                    <i class="fas fa-heart"></i>
+                    <h3>Affordable Luxury</h3>
+                    <p>We believe everyone deserves premium winter fashion. Quality doesn't have to break the bank.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+<!-- TEAM SECTION -->
+    <section class="team-section">
+        <div class="container">
+            <h2 class="section-title">Meet Our Team</h2>
+            <p class="team-intro">Behind Trendy Wear is a dedicated team of winter fashion experts, designers, and style curators passionate about bringing you the finest winter wear collections.</p>
+            
+            <div class="team-grid">
+                <div class="team-member">
+                    <div class="member-photo">
+                        <img src="images/Faiza Saqlain.png" alt="Faiza Saqlain">
+                    </div>
+                    <div class="member-info">
+                        <h3>Faiza Saqlain</h3>
+                        <p class="member-role">Founder & CEO</p>
+                        <p class="member-bio">With 15 years in fashion, Faiza founded Trendy Wear to bring premium winter clothing that combines warmth, comfort, and elegance to Pakistani families.</p>
+                        <div class="member-social">
+                            <a href="#"><i class="fab fa-linkedin"></i></a>
+                            <a href="#"><i class="fab fa-instagram"></i></a>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="team-member">
+                    <div class="member-photo">
+                        <img src="images/Maria B.png" alt="Maria B">
+                    </div>
+                    <div class="member-info">
+                        <h3>Maria B</h3>
+                        <p class="member-role">Creative Director</p>
+                        <p class="member-bio">Maria curates our exclusive winter collections, selecting the finest sweaters, coats, and accessories that keep you stylish during the cold season.</p>
+                        <div class="member-social">
+                            <a href="#"><i class="fab fa-linkedin"></i></a>
+                            <a href="#"><i class="fab fa-instagram"></i></a>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="team-member">
+                    <div class="member-photo">
+                        <img src="images/Shamaeel Ansari.png" alt="Shamaeel Ansari">
+                    </div>
+                    <div class="member-info">
+                        <h3>Shamaeel Ansari</h3>
+                        <p class="member-role">Head of Design</p>
+                        <p class="member-bio">Shamaeel ensures every winter piece meets our quality standards, from durable jackets to cozy knit wear, blending functionality with fashion.</p>
+                        <div class="member-social">
+                            <a href="#"><i class="fab fa-linkedin"></i></a>
+                            <a href="#"><i class="fab fa-instagram"></i></a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="statistics">
+        <div class="container">
+            <div class="stats-grid">
+                <div class="stat-item">
+                    <h3 class="stat-number">50K+</h3>
+                    <p>Happy Customers</p>
+                </div>
+                <div class="stat-item">
+                    <h3 class="stat-number">500+</h3>
+                    <p>Products</p>
+                </div>
+                <div class="stat-item">
+                    <h3 class="stat-number">25+</h3>
+                    <p>Countries</p>
+                </div>
+                <div class="stat-item">
+                    <h3 class="stat-number">98%</h3>
+                    <p>Satisfaction Rate</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- FOOTER -->
+    <footer class="footer bg-dark text-white py-5">
+        <div class="container">
+            <div class="row g-4 footer-content">
+                <div class="col-lg-3 col-md-6 footer-section">
+                    <h3 class="h5 mb-3">About Trendy Wear</h3>
+                    <p class="text-white-50">Stay warm and stylish with our exclusive winter collection. Premium quality for the cold season.</p>
+                </div>
+                <div class="col-lg-3 col-md-6 footer-section">
+                    <h3 class="h5 mb-3">Quick Links</h3>
+                    <ul class="list-unstyled">
+                        <li class="mb-2"><a href="about.html" class="text-white-50 text-decoration-none">About Us</a></li>
+                        <li class="mb-2"><a href="contact.html" class="text-white-50 text-decoration-none">Contact Us</a></li>
+                    </ul>
+                </div>
+                <div class="col-lg-3 col-md-6 footer-section">
+                    <h3 class="h5 mb-3">Customer Service</h3>
+                    <ul class="list-unstyled">
+                        <li class="mb-2"><a href="#" class="text-white-50 text-decoration-none">Shipping Info</a></li>
+                        <li class="mb-2"><a href="#" class="text-white-50 text-decoration-none">Returns</a></li>
+                        <li class="mb-2"><a href="#" class="text-white-50 text-decoration-none">FAQ</a></li>
+                        <li class="mb-2"><a href="#" class="text-white-50 text-decoration-none">Size Guide</a></li>
+                    </ul>
+                </div>
+                <div class="col-lg-3 col-md-6 footer-section">
+                    <h3 class="h5 mb-3">Follow Us</h3>
+                    <div class="social-links d-flex gap-3">
+                        <a href="https://www.facebook.com" class="text-white fs-4"><i class="fab fa-facebook"></i></a>
+                        <a href="https://www.instagram.com" class="text-white fs-4"><i class="fab fa-instagram"></i></a>
+                        <a href="https://x.com" class="text-white fs-4"><i class="fab fa-twitter"></i></a>
+                        <a href="https://www.pinterest.com" class="text-white fs-4"><i class="fab fa-pinterest"></i></a>
+                    </div>
+                </div>
+            </div>
+            <hr class="my-4 bg-secondary">
+            <div class="footer-bottom text-center">
+                <p class="mb-0 text-white-50">&copy; 2025 Trendy Wear. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="js/script.js"></script>
+</body>
+</html>
