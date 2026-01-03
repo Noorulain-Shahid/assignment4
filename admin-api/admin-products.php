@@ -72,11 +72,12 @@ if ($cat_result) {
     }
 }
 
-// Fetch Products (all, active and inactive)
+// Fetch Products (only active products so deleted ones disappear from the list)
 $products = [];
 $products_error = null;
 // Use id for ordering so it works even if created_at column is missing in older schemas
-$query = "SELECT p.*, c.name as category_name FROM products p LEFT JOIN categories c ON p.category_id = c.id ORDER BY p.id DESC";
+// Only include products where is_active = 1 so soft-deleted items are hidden
+$query = "SELECT p.*, c.name as category_name FROM products p LEFT JOIN categories c ON p.category_id = c.id WHERE p.is_active = 1 ORDER BY p.id DESC";
 $result = mysqli_query($conn, $query);
 if ($result) {
     while ($row = mysqli_fetch_assoc($result)) {

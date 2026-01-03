@@ -4,6 +4,13 @@ RewriteEngine On
 # Redirect Home.html to index.php
 RewriteRule ^Home\.html$ index.php [L]
 
+# Friendly URLs for login & signup pages (PHP wrappers)
+# Allow /login to resolve to login.php
+RewriteRule ^login/?$ login.php [L]
+
+# Allow /signup to resolve to signup.php
+RewriteRule ^signup/?$ signup.php [L]
+
 # Handle missing .html files
 RewriteCond %{REQUEST_FILENAME} !-f
 RewriteCond %{REQUEST_FILENAME} !-d

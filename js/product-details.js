@@ -207,34 +207,50 @@ function moveRelatedCarousel(direction) {
     carousel.style.transform = `translateX(${relatedCarouselPosition}px)`;
 }
 
-function changeImage(imageSrc, thumbnail) {
-    const mainImage = document.getElementById('mainImage');
-    mainImage.src = imageSrc;
-    mainImage.style.filter = 'none';
+        const product = allProducts.find(p => p.id === productId);
+        const quantity = parseInt(document.getElementById('quantity').value) || 1;
+        const size = document.getElementById('sizeSelect')?.value || '';
+        const color = document.getElementById('colorSelect')?.value || '';
+
+        if (!product) {
+            showNotification('Product not found!', 'error');
+            return;
+        }
+
+        const session = localStorage.getItem('userSession') || sessionStorage.getItem('userSession');
+
+        if (session) {
+            try {
+                await addToCartAPI(productId, quantity, size, color);
+                await updateCartCount();
+                showNotification(`${product.name} added to cart!`, 'success');
+                return;
+            } catch (err) {
+                console.error('Add to cart detailed (API) error:', err);
+                showNotification('Could not add to cart. Please try again.', 'error');
+                return;
+            }
+        }
+
+        const existingItem = cart.find(item => item.id === productId && item.size === size && item.color === color);
     
-    document.querySelectorAll('.thumbnail').forEach(t => t.classList.remove('active'));
-    thumbnail.classList.add('active');
-}
-
-let selectedSize = null;
-let selectedColor = null;
-
-function selectSize(button) {
-    document.querySelectorAll('.size-option').forEach(btn => btn.classList.remove('active'));
-    button.classList.add('active');
-    selectedSize = button.textContent;
-}
-
-function selectColor(button) {
-    document.querySelectorAll('.color-option').forEach(btn => btn.classList.remove('active'));
-    button.classList.add('active');
-    selectedColor = button.textContent;
-}
-
-let quantity = 1;
-
-function increaseQuantity() {
-    quantity++;
+        if (existingItem) {
+            existingItem.quantity += quantity;
+        } else {
+            cart.push({
+                id: product.id,
+                name: product.name,
+                price: product.price,
+                image: product.image_url || product.image,
+                size: size,
+                color: color,
+                quantity: quantity
+            });
+        }
+    
+        localStorage.setItem('cart', JSON.stringify(cart));
+        updateCartCount();
+        showNotification(`${product.name} added to cart!`, 'success');
     document.getElementById('quantityDisplay').textContent = quantity;
 }
 

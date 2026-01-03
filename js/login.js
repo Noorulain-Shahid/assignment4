@@ -38,7 +38,7 @@ document.getElementById('loginForm').addEventListener('submit', async function(e
         
         try {
             // Use backend API for login
-            const response = await fetch('api/login.php?v=' + Date.now(), {
+            const response = await fetch('login_api.php?v=' + Date.now(), {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ email: email, password: password })
@@ -52,9 +52,9 @@ document.getElementById('loginForm').addEventListener('submit', async function(e
                 // Store user session
                 const sessionData = {
                     id: data.user.id,
-                    username: data.user.username,
+                    username: data.user.email,
                     email: data.user.email,
-                    full_name: data.user.full_name,
+                    fullName: data.user.name,
                     loggedIn: true,
                     loginTime: new Date().toISOString()
                 };
@@ -72,7 +72,7 @@ document.getElementById('loginForm').addEventListener('submit', async function(e
                 clearErrors();
                 
                 setTimeout(() => {
-                    window.location.href = 'home.html';
+                    window.location.href = 'index.php';
                 }, 1500);
             } else {
                 showError('email', data.message || 'Invalid email or password');
@@ -139,9 +139,10 @@ document.addEventListener('DOMContentLoaded', function() {
     const session = localStorage.getItem('userSession') || sessionStorage.getItem('userSession');
     if (session) {
         const userData = JSON.parse(session);
-        showNotification(`Welcome back, ${userData.fullName}! Redirecting...`, 'success');
+        const displayName = userData.fullName || userData.full_name || userData.email || 'User';
+        showNotification(`Welcome back, ${displayName}! Redirecting...`, 'success');
         setTimeout(() => {
-            window.location.href = 'index.html';
+            window.location.href = 'index.php';
         }, 1500);
     }
 });

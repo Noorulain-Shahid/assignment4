@@ -50,7 +50,11 @@ if ($result) {
 
 // Fetch Orders
 $orders = [];
-$query = "SELECT o.*, u.first_name, u.last_name, u.email 
+$query = "SELECT o.*, 
+                 u.full_name, 
+                 u.username, 
+                 u.email,
+                 COALESCE(u.full_name, u.username, 'Guest Customer') as customer_name
           FROM orders o 
           LEFT JOIN users u ON o.user_id = u.id 
           ORDER BY o.created_at DESC";
@@ -266,14 +270,14 @@ if ($result) {
                                 <?php foreach ($orders as $order) { ?>
                                 <tr>
                                     <td>#<?php echo $order['id']; ?></td>
-                                    <td><?php echo $order['customer_name']; ?></td>
-                                    <td><?php echo date('M d, Y', strtotime($order['order_date'])); ?></td>
-                                    <td>Rs <?php echo number_format($order['total_amount'], 0); ?></td>
+                                    <td><?php echo htmlspecialchars($order['customer_name']); ?></td>
+                                    <td><?php echo date('M d, Y', strtotime($order['created_at'])); ?></td>
+                                    <td>PKR <?php echo number_format($order['final_amount'] ?? $order['total_amount'] ?? 0, 0); ?></td>
                                     <td>
-                                        <span class="status-badge <?php echo strtolower($order['status']); ?>"><?php echo $order['status']; ?></span>
+                                        <span class="status-badge <?php echo strtolower($order['status']); ?>"><?php echo htmlspecialchars($order['status']); ?></span>
                                     </td>
                                     <td>
-                                        <button class="action-btn edit" onclick='openStatusModal(<?php echo $order['id']; ?>, "<?php echo $order['status']; ?>")' title="Update Status">
+                                        <button class="action-btn edit" onclick='openStatusModal(<?php echo $order['id']; ?>, "<?php echo htmlspecialchars($order['status']); ?>")' title="Update Status">
                                             <i class="fas fa-edit"></i>
                                         </button>
                                     </td>
@@ -379,21 +383,33 @@ if ($result) {
     <script src="../admin-js/admin-ui.js"></script>
     <script>
         function openStatusModal(id, status) {
-            document.getElementById('statusModal').style.display = 'block';
+            const modal = document.getElementById('statusModal');
+            modal.style.display = 'flex';
+            modal.classList.add('show');
             document.getElementById('statusOrderId').value = id;
             document.getElementById('statusSelect').value = status;
         }
 
         function closeStatusModal() {
-            document.getElementById('statusModal').style.display = 'none';
+            const modal = document.getElementById('statusModal');
+            modal.classList.remove('show');
+            setTimeout(() => {
+                modal.style.display = 'none';
+            }, 300); // Match animation duration
         }
 
         function openAddOrderModal() {
-            document.getElementById('addOrderModal').style.display = 'block';
+            const modal = document.getElementById('addOrderModal');
+            modal.style.display = 'flex';
+            modal.classList.add('show');
         }
 
         function closeAddOrderModal() {
-            document.getElementById('addOrderModal').style.display = 'none';
+            const modal = document.getElementById('addOrderModal');
+            modal.classList.remove('show');
+            setTimeout(() => {
+                modal.style.display = 'none';
+            }, 300); // Match animation duration
         }
 
         function filterOrders() {

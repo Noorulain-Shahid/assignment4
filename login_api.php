@@ -5,7 +5,7 @@ header('Access-Control-Allow-Origin: *');
 header('Access-Control-Allow-Methods: POST');
 header('Access-Control-Allow-Headers: Content-Type');
 
-require_once '../admin-api/db_connect.php';
+require_once 'admin-api/db_connect.php';
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     http_response_code(405);
@@ -37,8 +37,8 @@ if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
 }
 
 try {
-    // Check user credentials
-    $stmt = $conn->prepare("SELECT id, first_name, last_name, email, password, is_active FROM users WHERE email = ?");
+    // Check user credentials (match current users schema)
+    $stmt = $conn->prepare("SELECT id, username, full_name, email, password, role FROM users WHERE email = ?");
     $stmt->bind_param("s", $email);
     $stmt->execute();
     $result = $stmt->get_result();
@@ -50,11 +50,6 @@ try {
     
     $user = $result->fetch_assoc();
     
-    if (!$user['is_active']) {
-        echo json_encode(['success' => false, 'message' => 'Account is deactivated. Please contact support.']);
-        exit;
-    }
-    
     // Verify password
     if (!password_verify($password, $user['password'])) {
         echo json_encode(['success' => false, 'message' => 'Invalid email or password']);
@@ -64,7 +59,8 @@ try {
     // Create session
     $_SESSION['user_id'] = $user['id'];
     $_SESSION['user_email'] = $user['email'];
-    $_SESSION['user_name'] = $user['first_name'] . ' ' . $user['last_name'];
+    $_SESSION['user_name'] = $user['full_name'] ?: $user['username'];
+    $_SESSION['user_role'] = $user['role'] ?? 'customer';
     
     echo json_encode([
         'success' => true,
@@ -72,12 +68,12 @@ try {
         'user' => [
             'id' => $user['id'],
             'email' => $user['email'],
-            'name' => $user['first_name'] . ' ' . $user['last_name'],
-            'first_name' => $user['first_name'],
-            'last_name' => $user['last_name']
+            'name' => $user['full_name'] ?: $user['username'],
+            'username' => $user['username'],
+            'role' => $user['role'] ?? 'customer'
         ],
         'session_token' => session_id(),
-        'redirect' => 'home.html'
+        'redirect' => 'index.php'
     ]);
     
     $stmt->close();

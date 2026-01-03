@@ -4,6 +4,7 @@ require_once 'admin-api/db_connect.php';
 
 // Get filter parameters
 $category = $_GET['category'] ?? '';
+$gender = $_GET['gender'] ?? '';
 $search = $_GET['search'] ?? '';
 $page = intval($_GET['page'] ?? 1);
 $limit = 12;
@@ -17,6 +18,12 @@ $types = "";
 if (!empty($category)) {
     $whereClause .= " AND c.name LIKE ?";
     $params[] = "%$category%";
+    $types .= "s";
+}
+
+if (!empty($gender)) {
+    $whereClause .= " AND p.gender = ?";
+    $params[] = $gender;
     $types .= "s";
 }
 
@@ -143,21 +150,33 @@ while ($row = $categoriesResult->fetch_assoc()) {
                             </ul>
                         </li>
                     <?php else: ?>
-                        <li class="nav-item"><a href="login.html" class="nav-link"><i class="fas fa-user"></i> Login</a></li>
+                        <li class="nav-item"><a href="login.php" class="nav-link"><i class="fas fa-user"></i> Login</a></li>
                     <?php endif; ?>
                 </ul>
+            </div>
+            
+            <div class="menu-arrow-container">
+                <i class="fas fa-chevron-down menu-arrow"></i>
             </div>
         </div>
     </nav>
 
-    <div class="container mt-5 pt-5">
+    <!-- Category Hero (same style as Get In Touch) -->
+    <section class="contact-hero">
+        <div class="container">
+            <h1 class="page-title">Shop By Category</h1>
+            <p class="page-subtitle">Find the perfect style for everyone</p>
+        </div>
+    </section>
+
+    <div class="container pt-5">
         <!-- Search and Filter Section -->
         <div class="row mb-4">
             <div class="col-md-8">
                 <form method="GET" class="d-flex">
                     <input type="text" name="search" class="form-control me-2" placeholder="Search products..." 
                            value="<?= htmlspecialchars($search) ?>">
-                    <button type="submit" class="btn btn-primary">
+                    <button type="submit" class="btn" style="background-color: var(--accent-beige); border-color: var(--accent-beige); color: var(--text-dark);">
                         <i class="fas fa-search"></i>
                     </button>
                 </form>
@@ -202,44 +221,36 @@ while ($row = $categoriesResult->fetch_assoc()) {
         <?php else: ?>
             <div class="row g-4">
                 <?php foreach ($products as $product): ?>
-                    <div class="col-lg-3 col-md-4 col-sm-6">
-                        <div class="product-card card h-100 border-0 shadow-sm">
-                            <div class="position-relative">
+                    <?php $salePrice = isset($product['sale_price']) ? $product['sale_price'] : null; ?>
+                    <div class="col-xl-3 col-lg-3 col-md-4 col-sm-6 col-12">
+                        <div class="product-card card h-100 border-0 shadow-sm" data-product-id="<?= $product['id'] ?>">
+                            <div class="position-relative product-image">
                                 <img src="<?= htmlspecialchars($product['image_url']) ?>" 
-                                     class="card-img-top product-img" 
-                                     alt="<?= htmlspecialchars($product['name']) ?>"
-                                     style="height: 300px; object-fit: cover;">
-                                <?php if ($product['sale_price']): ?>
+                                     alt="<?= htmlspecialchars($product['name']) ?>" class="card-img-top">
+                                <?php if (!empty($salePrice)): ?>
                                     <span class="badge bg-danger position-absolute top-0 start-0 m-2">Sale</span>
                                 <?php endif; ?>
                                 <?php if ($product['stock_quantity'] <= 0): ?>
                                     <span class="badge bg-secondary position-absolute top-0 end-0 m-2">Out of Stock</span>
                                 <?php endif; ?>
                             </div>
-                            <div class="card-body d-flex flex-column">
-                                <h5 class="card-title"><?= htmlspecialchars($product['name']) ?></h5>
-                                <p class="card-text text-muted flex-grow-1">
-                                    <?= htmlspecialchars(substr($product['description'], 0, 80)) ?>...
-                                </p>
-                                <div class="price-section mb-3">
-                                    <?php if ($product['sale_price']): ?>
-                                        <span class="text-decoration-line-through text-muted">$<?= number_format($product['price'], 2) ?></span>
-                                        <span class="text-danger fw-bold ms-2">$<?= number_format($product['sale_price'], 2) ?></span>
+                            <div class="card-body d-flex flex-column product-info">
+                                <h5 class="card-title product-name mb-2"><?= htmlspecialchars($product['name']) ?></h5>
+                                <div class="price-section mb-3 product-price">
+                                    <?php if (!empty($salePrice)): ?>
+                                        <span class="text-decoration-line-through text-muted">Rs <?= number_format($product['price'], 0) ?></span>
+                                        <span class="text-danger fw-bold ms-2">Rs <?= number_format($salePrice, 0) ?></span>
                                     <?php else: ?>
-                                        <span class="fw-bold">$<?= number_format($product['price'], 2) ?></span>
+                                        <span class="fw-bold">Rs <?= number_format($product['price'], 0) ?></span>
                                     <?php endif; ?>
                                 </div>
-                                <div class="d-flex gap-2">
-                                    <a href="product-details.php?id=<?= $product['id'] ?>" class="btn btn-outline-primary flex-grow-1">
+                                <div class="d-flex gap-2 product-actions">
+                                    <a href="product-details.php?id=<?= $product['id'] ?>" class="btn btn-outline-beige flex-grow-1">
                                         View Details
                                     </a>
                                     <?php if ($product['stock_quantity'] > 0): ?>
-                                        <button class="btn btn-primary" onclick="addToCart(<?= $product['id'] ?>)">
+                                        <button class="btn btn-beige" onclick="addToCart(<?= $product['id'] ?>)">
                                             <i class="fas fa-cart-plus"></i>
-                                        </button>
-                                    <?php else: ?>
-                                        <button class="btn btn-secondary" disabled>
-                                            <i class="fas fa-times"></i>
                                         </button>
                                     <?php endif; ?>
                                 </div>
@@ -283,33 +294,74 @@ while ($row = $categoriesResult->fetch_assoc()) {
     </div>
 
     <!-- FOOTER -->
-    <footer class="bg-dark text-white py-5 mt-5">
+    <footer class="footer-section">
         <div class="container">
-            <div class="row">
-                <div class="col-md-4">
-                    <h5>Trendy Wear</h5>
-                    <p>Your destination for trendy and affordable fashion.</p>
-                </div>
-                <div class="col-md-4">
-                    <h5>Categories</h5>
-                    <ul class="list-unstyled">
-                        <?php foreach (array_slice($categories, 0, 5) as $cat): ?>
-                            <li><a href="products.php?category=<?= urlencode($cat['name']) ?>" class="text-white-50"><?= htmlspecialchars($cat['name']) ?></a></li>
-                        <?php endforeach; ?>
-                    </ul>
-                </div>
-                <div class="col-md-4">
-                    <h5>Contact Info</h5>
-                    <p class="text-white-50">
-                        <i class="fas fa-envelope"></i> info@trendywear.com<br>
-                        <i class="fas fa-phone"></i> (123) 456-7890<br>
-                        <i class="fas fa-map-marker-alt"></i> 123 Fashion Street, Style City
-                    </p>
+            <div class="footer-content py-5">
+                <div class="row g-4">
+                    <!-- Brand Column -->
+                    <div class="col-lg-4 col-md-6">
+                        <h5 class="footer-title mb-4">About Us</h5>
+                        <p class="footer-description mb-4">Your destination for trendy and affordable fashion. Discover your style, define your elegance.</p>
+                        <div class="social-links">
+                            <a href="#" class="social-icon" aria-label="Facebook"><i class="fab fa-facebook-f"></i></a>
+                            <a href="#" class="social-icon" aria-label="Instagram"><i class="fab fa-instagram"></i></a>
+                            <a href="#" class="social-icon" aria-label="Twitter"><i class="fab fa-twitter"></i></a>
+                            <a href="#" class="social-icon" aria-label="Pinterest"><i class="fab fa-pinterest-p"></i></a>
+                        </div>
+                    </div>
+
+                    <!-- Quick Links Column -->
+                    <div class="col-lg-2 col-md-6">
+                        <h5 class="footer-title mb-4">Quick Links</h5>
+                        <ul class="footer-links list-unstyled">
+                            <li><a href="index.php"><i class="fas fa-chevron-right"></i> Home</a></li>
+                            <li><a href="products.php"><i class="fas fa-chevron-right"></i> Products</a></li>
+                            <li><a href="about.html"><i class="fas fa-chevron-right"></i> About Us</a></li>
+                            <li><a href="contact.html"><i class="fas fa-chevron-right"></i> Contact</a></li>
+                        </ul>
+                    </div>
+
+                    <!-- Shop Categories Column -->
+                    <div class="col-lg-3 col-md-6">
+                        <h5 class="footer-title mb-4">Shop By</h5>
+                        <ul class="footer-links list-unstyled">
+                            <li><a href="products.php?gender=Men"><i class="fas fa-chevron-right"></i> Men's Collection</a></li>
+                            <li><a href="products.php?gender=Women"><i class="fas fa-chevron-right"></i> Women's Collection</a></li>
+                            <li><a href="products.php?gender=Kids"><i class="fas fa-chevron-right"></i> Kids Collection</a></li>
+                            <li><a href="orders.php"><i class="fas fa-chevron-right"></i> My Orders</a></li>
+                        </ul>
+                    </div>
+
+                    <!-- Contact Info Column -->
+                    <div class="col-lg-3 col-md-6">
+                        <h5 class="footer-title mb-4">Contact Info</h5>
+                        <ul class="footer-contact list-unstyled">
+                            <li>
+                                <i class="fas fa-map-marker-alt"></i>
+                                <span>123 Fashion Street<br>Style City, SC 12345</span>
+                            </li>
+                            <li>
+                                <i class="fas fa-phone"></i>
+                                <span>(123) 456-7890</span>
+                            </li>
+                            <li>
+                                <i class="fas fa-envelope"></i>
+                                <span>info@trendywear.com</span>
+                            </li>
+                            <li>
+                                <i class="fas fa-clock"></i>
+                                <span>Mon - Sat: 9AM - 8PM</span>
+                            </li>
+                        </ul>
+                    </div>
                 </div>
             </div>
-            <hr class="my-4">
-            <div class="text-center">
-                <p>&copy; 2026 Trendy Wear. All rights reserved.</p>
+
+            <!-- Footer Bottom -->
+            <div class="footer-bottom py-4">
+                <div class="text-center">
+                    <p class="mb-0">&copy; 2026 <strong>Trendy Wear</strong>. All rights reserved.</p>
+                </div>
             </div>
         </div>
     </footer>
@@ -324,12 +376,12 @@ while ($row = $categoriesResult->fetch_assoc()) {
         async function addToCart(productId) {
             <?php if (!isset($_SESSION['user_id'])): ?>
                 alert('Please login to add items to cart');
-                window.location.href = 'login.html';
+                window.location.href = 'login.php';
                 return;
             <?php endif; ?>
             
             try {
-                const response = await fetch('api/cart.php', {
+                const response = await fetch('cart_api.php', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
@@ -357,7 +409,7 @@ while ($row = $categoriesResult->fetch_assoc()) {
         async function updateCartCount() {
             <?php if (isset($_SESSION['user_id'])): ?>
             try {
-                const response = await fetch('api/cart.php');
+                const response = await fetch('cart_api.php');
                 const data = await response.json();
                 if (data.success) {
                     document.getElementById('cartCount').textContent = data.item_count;

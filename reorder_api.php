@@ -5,7 +5,7 @@ header('Access-Control-Allow-Origin: *');
 header('Access-Control-Allow-Methods: POST');
 header('Access-Control-Allow-Headers: Content-Type');
 
-require_once '../admin-api/db_connect.php';
+require_once 'admin-api/db_connect.php';
 
 // Check if user is logged in
 if (!isset($_SESSION['user_id'])) {

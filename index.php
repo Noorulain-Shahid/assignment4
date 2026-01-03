@@ -2,17 +2,35 @@
 session_start();
 require_once 'admin-api/db_connect.php';
 
-// Get products to show on home page (latest 6 active products)
+// Get products to show in the Featured Products section
 $featuredProducts = [];
 $featuredError = null;
-$featuredQuery = "SELECT * FROM products WHERE is_active = 1 ORDER BY created_at DESC LIMIT 6";
+
+// 1) Try to load explicitly featured products (prefer these)
+$featuredQuery = "SELECT * FROM products WHERE is_active = 1 AND is_featured = 1 ORDER BY created_at DESC LIMIT 8";
 $featuredResult = $conn->query($featuredQuery);
-if ($featuredResult) {
+
+if ($featuredResult === false) {
+    // SQL error
+    $featuredError = $conn->error;
+} else {
     while ($row = $featuredResult->fetch_assoc()) {
         $featuredProducts[] = $row;
     }
-} else {
-    $featuredError = $conn->error;
+
+    // 2) If no explicitly featured products, fall back to latest active products
+    if (empty($featuredProducts)) {
+        $featuredQuery = "SELECT * FROM products WHERE is_active = 1 ORDER BY created_at DESC LIMIT 8";
+        $featuredResult = $conn->query($featuredQuery);
+
+        if ($featuredResult === false) {
+            $featuredError = $conn->error;
+        } else {
+            while ($row = $featuredResult->fetch_assoc()) {
+                $featuredProducts[] = $row;
+            }
+        }
+    }
 }
 
 // Get categories
@@ -90,7 +108,7 @@ if ($categoriesResult) {
                             </ul>
                         </li>
                     <?php else: ?>
-                        <li class="nav-item"><a href="login.html" class="nav-link"><i class="fas fa-user"></i> Login</a></li>
+                        <li class="nav-item"><a href="login.php" class="nav-link"><i class="fas fa-user"></i> Login</a></li>
                     <?php endif; ?>
                 </ul>
             </div>
@@ -124,94 +142,163 @@ if ($categoriesResult) {
         <div class="container">
             <h2 class="section-title text-center mb-5">Shop By Category</h2>
             <div class="row g-4 justify-content-center">
-                <?php foreach (array_slice($categories, 0, 6) as $category): ?>
-                    <div class="col-lg-4 col-md-6">
-                        <a href="products.php?category=<?= urlencode($category['name']) ?>" class="category-card text-decoration-none">
-                            <div class="card h-100 border-0 shadow-sm hover-lift">
-                                <img src="<?= htmlspecialchars($category['image_url'] ?: 'images/default-category.jpg') ?>" class="card-img-top" alt="<?= htmlspecialchars($category['name']) ?>">
-                                <div class="card-body text-center">
-                                    <h4 class="card-title mb-2"><?= htmlspecialchars($category['name']) ?></h4>
-                                    <p class="text-muted"><?= htmlspecialchars($category['description']) ?></p>
-                                </div>
+                <div class="col-lg-4 col-md-6">
+                    <a href="products.php?gender=Men" class="category-card text-decoration-none">
+                        <div class="card h-100 border-0 shadow-sm hover-lift">
+                            <img src="images/black sweat shirt for men.png" class="card-img-top" alt="Men">
+                            <div class="card-body text-center">
+                                <h4 class="card-title mb-2">Men</h4>
+                                <p class="text-muted">Explore our latest men's collection.</p>
                             </div>
-                        </a>
-                    </div>
-                <?php endforeach; ?>
+                        </div>
+                    </a>
+                </div>
+                <div class="col-lg-4 col-md-6">
+                    <a href="products.php?gender=Women" class="category-card text-decoration-none">
+                        <div class="card h-100 border-0 shadow-sm hover-lift">
+                            <img src="images/red sweater for women.png" class="card-img-top" alt="Women">
+                            <div class="card-body text-center">
+                                <h4 class="card-title mb-2">Women</h4>
+                                <p class="text-muted">Discover elegant styles for women.</p>
+                            </div>
+                        </div>
+                    </a>
+                </div>
+                <div class="col-lg-4 col-md-6">
+                    <a href="products.php?gender=Kids" class="category-card text-decoration-none">
+                        <div class="card h-100 border-0 shadow-sm hover-lift">
+                            <img src="images/skin color sweater for kids.png" class="card-img-top" alt="Kids">
+                            <div class="card-body text-center">
+                                <h4 class="card-title mb-2">Kids</h4>
+                                <p class="text-muted">Fun and comfy outfits for kids.</p>
+                            </div>
+                        </div>
+                    </a>
+                </div>
             </div>
         </div>
     </section>
 
-    <!-- FEATURED PRODUCTS SECTION -->
-    <section class="featured-products py-5">
-        <div class="container">
-            <h2 class="section-title text-center mb-5">Featured Products</h2>
-            <div class="row g-4">
-                <?php foreach ($featuredProducts as $product): ?>
-                    <div class="col-lg-4 col-md-6">
-                        <div class="product-card card h-100 border-0 shadow-sm">
-                            <div class="position-relative">
-                                <img src="<?= htmlspecialchars($product['image_url']) ?>" class="card-img-top product-img" alt="<?= htmlspecialchars($product['name']) ?>">
-                                <?php if ($product['sale_price']): ?>
-                                    <span class="badge bg-danger position-absolute top-0 start-0 m-2">Sale</span>
-                                <?php endif; ?>
-                            </div>
-                            <div class="card-body d-flex flex-column">
-                                <h5 class="card-title"><?= htmlspecialchars($product['name']) ?></h5>
-                                <p class="card-text text-muted flex-grow-1"><?= htmlspecialchars(substr($product['description'], 0, 100)) ?>...</p>
-                                <div class="price-section mb-3">
-                                    <?php if ($product['sale_price']): ?>
-                                        <span class="text-decoration-line-through text-muted">$<?= number_format($product['price'], 2) ?></span>
-                                        <span class="text-danger fw-bold ms-2">$<?= number_format($product['sale_price'], 2) ?></span>
-                                    <?php else: ?>
-                                        <span class="fw-bold">$<?= number_format($product['price'], 2) ?></span>
+    <!-- FEATURED PRODUCTS SECTION WITH SLIDER -->
+    <section class="featured-products featured-section py-5">
+        <div class="container position-center">
+            <h2 class="section-title text-center mb-4">Featured Products</h2>
+
+            <div class="products-carousel-wrapper position-relative mt-3">
+                <!-- Carousel Controls -->
+                <button type="button" class="carousel-control-btn carousel-prev" onclick="moveCarousel(-1)">
+                    <i class="fas fa-chevron-left"></i>
+                </button>
+                <button type="button" class="carousel-control-btn carousel-next" onclick="moveCarousel(1)">
+                    <i class="fas fa-chevron-right"></i>
+                </button>
+
+                <!-- Products Carousel -->
+                <div class="products-carousel row">
+                    <?php foreach ($featuredProducts as $product): ?>
+                        <?php $salePrice = isset($product['sale_price']) ? $product['sale_price'] : null; ?>
+                        <div class="col-lg-3 col-md-6 col-sm-6 col-12">
+                            <div class="product-card card h-100 border-0 shadow-sm">
+                                <div class="position-relative product-image">
+                                    <img src="<?= htmlspecialchars($product['image_url']) ?>" class="card-img-top" alt="<?= htmlspecialchars($product['name']) ?>">
+                                    <?php if (!empty($salePrice)): ?>
+                                        <span class="badge bg-danger position-absolute top-0 start-0 m-2">Sale</span>
                                     <?php endif; ?>
                                 </div>
-                                <div class="d-flex gap-2">
-                                    <a href="product-details.php?id=<?= $product['id'] ?>" class="btn btn-outline-primary flex-grow-1">View Details</a>
-                                    <button class="btn btn-primary" onclick="addToCart(<?= $product['id'] ?>)">
-                                        <i class="fas fa-cart-plus"></i>
-                                    </button>
+                                <div class="card-body d-flex flex-column">
+                                    <h5 class="card-title product-name"><?= htmlspecialchars($product['name']) ?></h5>
+                                    <div class="price-section mb-3 product-price">
+                                        <?php if (!empty($salePrice)): ?>
+                                            <span class="text-decoration-line-through text-muted">Rs <?= number_format($product['price'], 0) ?></span>
+                                            <span class="text-danger fw-bold ms-2">Rs <?= number_format($salePrice, 0) ?></span>
+                                        <?php else: ?>
+                                            <span class="fw-bold">Rs <?= number_format($product['price'], 0) ?></span>
+                                        <?php endif; ?>
+                                    </div>
+                                    <div class="d-flex gap-2 product-actions">
+                                        <a href="product-details.php?id=<?= $product['id'] ?>" class="btn btn-outline-beige flex-grow-1">View Details</a>
+                                        <button class="btn btn-beige" onclick="addToCart(<?= $product['id'] ?>)">
+                                            <i class="fas fa-cart-plus"></i>
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
                         </div>
-                    </div>
-                <?php endforeach; ?>
-            </div>
-            <div class="text-center mt-5">
-                <a href="products.php" class="btn btn-primary btn-lg px-5">View All Products</a>
+                    <?php endforeach; ?>
+                </div>
             </div>
         </div>
     </section>
 
     <!-- FOOTER -->
-    <footer class="bg-dark text-white py-5">
+    <footer class="footer-section">
         <div class="container">
-            <div class="row">
-                <div class="col-md-4">
-                    <h5>Trendy Wear</h5>
-                    <p>Your destination for trendy and affordable fashion.</p>
-                </div>
-                <div class="col-md-4">
-                    <h5>Quick Links</h5>
-                    <ul class="list-unstyled">
-                        <li><a href="index.php" class="text-white-50">Home</a></li>
-                        <li><a href="products.php" class="text-white-50">Products</a></li>
-                        <li><a href="about.html" class="text-white-50">About Us</a></li>
-                        <li><a href="contact.html" class="text-white-50">Contact</a></li>
-                    </ul>
-                </div>
-                <div class="col-md-4">
-                    <h5>Contact Info</h5>
-                    <p class="text-white-50">
-                        <i class="fas fa-envelope"></i> info@trendywear.com<br>
-                        <i class="fas fa-phone"></i> (123) 456-7890<br>
-                        <i class="fas fa-map-marker-alt"></i> 123 Fashion Street, Style City
-                    </p>
+            <div class="footer-content py-5">
+                <div class="row g-4">
+                    <!-- Brand Column -->
+                    <div class="col-lg-4 col-md-6">
+                        <h5 class="footer-title mb-4">About Us</h5>
+                        <p class="footer-description mb-4">Your destination for trendy and affordable fashion. Discover your style, define your elegance.</p>
+                        <div class="social-links">
+                            <a href="#" class="social-icon" aria-label="Facebook"><i class="fab fa-facebook-f"></i></a>
+                            <a href="#" class="social-icon" aria-label="Instagram"><i class="fab fa-instagram"></i></a>
+                            <a href="#" class="social-icon" aria-label="Twitter"><i class="fab fa-twitter"></i></a>
+                            <a href="#" class="social-icon" aria-label="Pinterest"><i class="fab fa-pinterest-p"></i></a>
+                        </div>
+                    </div>
+
+                    <!-- Quick Links Column -->
+                    <div class="col-lg-2 col-md-6">
+                        <h5 class="footer-title mb-4">Quick Links</h5>
+                        <ul class="footer-links list-unstyled">
+                            <li><a href="index.php"><i class="fas fa-chevron-right"></i> Home</a></li>
+                            <li><a href="products.php"><i class="fas fa-chevron-right"></i> Products</a></li>
+                            <li><a href="about.html"><i class="fas fa-chevron-right"></i> About Us</a></li>
+                            <li><a href="contact.html"><i class="fas fa-chevron-right"></i> Contact</a></li>
+                        </ul>
+                    </div>
+
+                    <!-- Shop Categories Column -->
+                    <div class="col-lg-3 col-md-6">
+                        <h5 class="footer-title mb-4">Shop By</h5>
+                        <ul class="footer-links list-unstyled">
+                            <li><a href="products.php?gender=Men"><i class="fas fa-chevron-right"></i> Men's Collection</a></li>
+                            <li><a href="products.php?gender=Women"><i class="fas fa-chevron-right"></i> Women's Collection</a></li>
+                            <li><a href="products.php?gender=Kids"><i class="fas fa-chevron-right"></i> Kids Collection</a></li>
+                            <li><a href="orders.php"><i class="fas fa-chevron-right"></i> My Orders</a></li>
+                        </ul>
+                    </div>
+
+                    <!-- Contact Info Column -->
+                    <div class="col-lg-3 col-md-6">
+                        <h5 class="footer-title mb-4">Contact Info</h5>
+                        <ul class="footer-contact list-unstyled">
+                            <li>
+                                <i class="fas fa-map-marker-alt"></i>
+                                <span>123 Fashion Street<br>Style City, SC 12345</span>
+                            </li>
+                            <li>
+                                <i class="fas fa-phone"></i>
+                                <span>(123) 456-7890</span>
+                            </li>
+                            <li>
+                                <i class="fas fa-envelope"></i>
+                                <span>info@trendywear.com</span>
+                            </li>
+                            <li>
+                                <i class="fas fa-clock"></i>
+                                <span>Mon - Sat: 9AM - 8PM</span>
+                            </li>
+                        </ul>
+                    </div>
                 </div>
             </div>
-            <hr class="my-4">
-            <div class="text-center">
-                <p>&copy; 2026 Trendy Wear. All rights reserved.</p>
+
+            <!-- Footer Bottom -->
+            <div class="footer-bottom py-4">
+                <div class="text-center">
+                    <p class="mb-0">&copy; 2026 <strong>Trendy Wear</strong>. All rights reserved.</p>
+                </div>
             </div>
         </div>
     </footer>
@@ -226,12 +313,12 @@ if ($categoriesResult) {
         async function addToCart(productId) {
             <?php if (!isset($_SESSION['user_id'])): ?>
                 alert('Please login to add items to cart');
-                window.location.href = 'login.html';
+                window.location.href = 'login.php';
                 return;
             <?php endif; ?>
             
             try {
-                const response = await fetch('api/cart.php', {
+                const response = await fetch('cart_api.php', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
@@ -259,7 +346,7 @@ if ($categoriesResult) {
         async function updateCartCount() {
             <?php if (isset($_SESSION['user_id'])): ?>
             try {
-                const response = await fetch('api/cart.php');
+                const response = await fetch('cart_api.php');
                 const data = await response.json();
                 if (data.success) {
                     document.getElementById('cartCount').textContent = data.item_count;

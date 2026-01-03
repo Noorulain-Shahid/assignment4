@@ -81,7 +81,7 @@ if (isset($_POST['change_password'])) {
         $error = "New passwords do not match.";
     } elseif ($current_password === $new_password) {
         $error = "New password must be different from current password.";
-    } elseif (!password_verify($current_password, $user['password'])) {
+    } elseif (!empty($user['password']) && !password_verify($current_password, $user['password'])) {
         $error = "Incorrect current password.";
     } else {
         // All validations passed, update password
@@ -215,9 +215,9 @@ if (isset($_POST['change_password'])) {
                         <i class="fas fa-user-circle"></i>
                     </div>
                     <div class="profile-header-info">
-                        <h2 id="profileHeaderName"><?php echo $user['name']; ?></h2>
-                        <p id="profileHeaderEmail"><?php echo $user['email']; ?></p>
-                        <span class="role-badge"><?php echo $user['role']; ?></span>
+                        <h2 id="profileHeaderName"><?php echo isset($user['name']) ? htmlspecialchars($user['name']) : 'Administrator'; ?></h2>
+                        <p id="profileHeaderEmail"><?php echo isset($user['email']) ? htmlspecialchars($user['email']) : 'admin@example.com'; ?></p>
+                        <span class="role-badge"><?php echo isset($user['role']) ? htmlspecialchars($user['role']) : 'admin'; ?></span>
                     </div>
                 </div>
 
@@ -230,15 +230,15 @@ if (isset($_POST['change_password'])) {
                         <form id="profileForm" method="post" action="">
                             <div class="form-group">
                                 <label for="adminFullName"><i class="fas fa-user"></i> Full Name</label>
-                                <input type="text" id="adminFullName" name="name" value="<?php echo $user['name']; ?>" required>
+                                <input type="text" id="adminFullName" name="name" value="<?php echo isset($user['name']) ? htmlspecialchars($user['name']) : ''; ?>" required>
                             </div>
                             <div class="form-group">
                                 <label for="adminEmail"><i class="fas fa-envelope"></i> Email Address</label>
-                                <input type="email" id="adminEmail" name="email" value="<?php echo $user['email']; ?>" required>
+                                <input type="email" id="adminEmail" name="email" value="<?php echo isset($user['email']) ? htmlspecialchars($user['email']) : ''; ?>" required>
                             </div>
                             <div class="form-group">
                                 <label for="adminRole"><i class="fas fa-shield-alt"></i> Role</label>
-                                <input type="text" id="adminRole" value="<?php echo $user['role']; ?>" readonly>
+                                <input type="text" id="adminRole" value="<?php echo isset($user['role']) ? htmlspecialchars($user['role']) : 'admin'; ?>" readonly>
                             </div>
                             <button type="submit" name="update_profile" class="btn-primary">
                                 <i class="fas fa-save"></i>

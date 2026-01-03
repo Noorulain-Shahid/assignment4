@@ -8,6 +8,7 @@ document.getElementById('signupForm').addEventListener('submit', async function(
     const fullName = document.getElementById('fullName').value.trim();
     const email = document.getElementById('email').value.trim();
     const phone = document.getElementById('phone').value.trim();
+    const address = document.getElementById('address') ? document.getElementById('address').value.trim() : '';
     const password = document.getElementById('password').value;
     const confirmPassword = document.getElementById('confirmPassword').value;
     const terms = document.getElementById('terms').checked;
@@ -65,34 +66,53 @@ document.getElementById('signupForm').addEventListener('submit', async function(
             // Generate username from email
             const username = email.split('@')[0];
             
-            // Call backend API
-            const response = await fetch('api/signup.php', {
+            // Split full name into first and last name
+            const nameParts = fullName.trim().split(/\s+/);
+            const firstName = nameParts[0];
+            const lastName = nameParts.slice(1).join(' ') || firstName; // Use first name as last name if no last name provided to satisfy backend
+
+            // Call backend API with robust parsing
+            const response = await fetch('signup_api.php', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     username: username,
                     email: email,
                     password: password,
-                    full_name: fullName,
-                    phone: phone
+                    confirmPassword: confirmPassword,
+                    firstName: firstName,
+                    lastName: lastName,
+                    phone: phone,
+                    address: address
                 })
             });
-            
-            const data = await response.json();
+
+            const rawText = await response.text();
+            let data;
+            try {
+                data = JSON.parse(rawText);
+            } catch (parseErr) {
+                console.error('Signup parse error. Raw response:', rawText);
+                throw new Error('Invalid server response');
+            }
+
+            if (!response.ok) {
+                throw new Error(data.message || 'Registration failed');
+            }
             
             if (data.success) {
-                // Store user session
+                // Store user session using the API fields (name is returned, not full_name)
                 const sessionData = {
                     id: data.user.id,
-                    username: data.user.username,
+                    username: data.user.username || data.user.email,
                     email: data.user.email,
-                    full_name: data.user.full_name,
+                    fullName: data.user.name || data.user.full_name || fullName,
                     loggedIn: true,
                     loginTime: new Date().toISOString()
                 };
                 
                 localStorage.setItem('userSession', JSON.stringify(sessionData));
-                localStorage.setItem('sessionToken', data.session_token);
+                localStorage.setItem('sessionToken', data.session_token || '');
                 
                 showNotification('Account created successfully! Redirecting...', 'success');
                 
@@ -100,13 +120,25 @@ document.getElementById('signupForm').addEventListener('submit', async function(
                 clearErrors();
                 
                 setTimeout(() => {
-                    window.location.href = 'home.html';
+                    window.location.href = 'index.php';
                 }, 1500);
             } else {
-                showError('email', data.message || 'Registration failed');
+                const message = data.message || 'Registration failed';
+
+                // Route server-side errors to the most relevant field
+                if (/password/i.test(message)) {
+                    showError('password', message);
+                    showError('confirmPassword', message);
+                } else if (/email/i.test(message)) {
+                    showError('email', message);
+                } else {
+                    // Default to email field for generic errors
+                    showError('email', message);
+                }
+
                 submitBtn.innerHTML = originalText;
                 submitBtn.disabled = false;
-                showNotification(data.message || 'Registration failed!', 'error');
+                showNotification(message, 'error');
             }
         } catch (error) {
             console.error('Signup error:', error);

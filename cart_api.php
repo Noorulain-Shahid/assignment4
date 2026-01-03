@@ -5,7 +5,7 @@ header('Access-Control-Allow-Origin: *');
 header('Access-Control-Allow-Methods: GET, POST, PUT, DELETE');
 header('Access-Control-Allow-Headers: Content-Type');
 
-require_once '../admin-api/db_connect.php';
+require_once 'admin-api/db_connect.php';
 
 // Check if user is logged in
 if (!isset($_SESSION['user_id'])) {
@@ -19,16 +19,34 @@ $userId = $_SESSION['user_id'];
 if ($_SERVER['REQUEST_METHOD'] === 'GET') {
     // Get cart items
     try {
-        $stmt = $conn->prepare("
-            SELECT c.*, p.name, p.price, p.image_url, p.stock_quantity 
-            FROM cart c 
-            JOIN products p ON c.product_id = p.id 
-            WHERE c.user_id = ? 
-            ORDER BY c.added_at DESC
-        ");
-        $stmt->bind_param("i", $userId);
-        $stmt->execute();
-        $result = $stmt->get_result();
+            $sql = "
+                SELECT c.*, p.name, p.price, p.image_url, p.stock_quantity 
+                FROM cart c 
+                JOIN products p ON c.product_id = p.id 
+                WHERE c.user_id = ? 
+                ORDER BY COALESCE(c.updated_at, c.created_at) DESC
+            ";
+            $stmt = $conn->prepare($sql);
+            if (!$stmt) {
+                error_log('Cart API prepare failed (primary): ' . $conn->error . ' SQL: ' . $sql);
+                // Fallback ordering
+                $sql = "
+                    SELECT c.*, p.name, p.price, p.image_url, p.stock_quantity 
+                    FROM cart c 
+                    JOIN products p ON c.product_id = p.id 
+                    WHERE c.user_id = ? 
+                    ORDER BY c.id DESC
+                ";
+                $stmt = $conn->prepare($sql);
+            }
+
+            if (!$stmt) {
+                throw new Exception('Unable to load cart items: ' . $conn->error);
+            }
+
+            $stmt->bind_param("i", $userId);
+            $stmt->execute();
+            $result = $stmt->get_result();
         
         $cartItems = [];
         $total = 0;

@@ -2,6 +2,20 @@
 require('auth_session.php');
 require('db_connect.php');
 
+// Handle reset stats functionality
+if (isset($_POST['reset_stats'])) {
+    // Reset orders (this will affect sales and order counts)
+    mysqli_query($conn, "DELETE FROM order_items");
+    mysqli_query($conn, "DELETE FROM orders");
+    
+    // Optional: Reset other stats if needed
+    // mysqli_query($conn, "DELETE FROM feedback"); // if you have feedback table
+    
+    // Redirect to refresh the page and show updated stats
+    header("Location: admin-dashboard.php");
+    exit();
+}
+
 // Optional: admin id if needed later
 $user_id = isset($_SESSION['admin_id']) ? $_SESSION['admin_id'] : null;
 
@@ -12,8 +26,8 @@ $total_products = 0;
 $total_customers = 0;
 $total_categories = 0;
 
-// Get total sales (use total_amount column from orders table)
-$result = mysqli_query($conn, "SELECT SUM(total_amount) as total FROM orders");
+// Get total sales (use final_amount column from orders table)
+$result = mysqli_query($conn, "SELECT SUM(COALESCE(final_amount, total_amount, 0)) as total FROM orders");
 if ($result && $row = mysqli_fetch_assoc($result)) {
     $total_sales = $row['total'] ? $row['total'] : 0;
 }
@@ -40,14 +54,24 @@ if ($result && $row = mysqli_fetch_assoc($result)) {
 $result = mysqli_query($conn, "SELECT COUNT(*) as count FROM categories");
 if ($result && $row = mysqli_fetch_assoc($result)) {
     $total_categories = $row['count'];
+} else {
+    // If categories table doesn't exist, set to 0
+    $total_categories = 0;
 }
 
 // Fetch recent orders
 $recent_orders = [];
-$query = "SELECT * FROM orders ORDER BY created_at DESC LIMIT 5";
+$query = "SELECT o.*, u.full_name as customer_name, u.username 
+          FROM orders o 
+          LEFT JOIN users u ON o.user_id = u.id 
+          ORDER BY o.created_at DESC LIMIT 5";
 $result = mysqli_query($conn, $query);
 if ($result) {
     while ($row = mysqli_fetch_assoc($result)) {
+        // Fallback to username if full_name is not available
+        if (empty($row['customer_name'])) {
+            $row['customer_name'] = $row['username'] ? $row['username'] : 'Guest Customer';
+        }
         $recent_orders[] = $row;
     }
 }
@@ -59,8 +83,8 @@ for ($i = 6; $i >= 0; $i--) {
     $date = date('Y-m-d', strtotime("-$i days"));
     $dates[] = date('M d', strtotime($date));
     
-    // Sum total_amount per day from orders table
-    $query = "SELECT SUM(total_amount) as total FROM orders WHERE DATE(created_at) = '$date'";
+    // Sum final_amount per day from orders table
+    $query = "SELECT SUM(COALESCE(final_amount, total_amount, 0)) as total FROM orders WHERE DATE(created_at) = '$date'";
     $result = mysqli_query($conn, $query);
     if ($result && $row = mysqli_fetch_assoc($result)) {
         $sales[] = $row['total'] ? $row['total'] : 0;
@@ -164,7 +188,7 @@ if ($result) {
                 <h1>Dashboard</h1>
                 <div class="topbar-right">
                     <div class="admin-info">
-                        <span id="adminName"><?php echo $_SESSION['name']; ?></span>
+                        <span id="adminName"><?php echo isset($_SESSION['name']) ? htmlspecialchars($_SESSION['name']) : 'Administrator'; ?></span>
                         <i class="fas fa-user-circle"></i>
                     </div>
                 </div>
@@ -175,7 +199,7 @@ if ($result) {
                 <!-- Welcome Banner -->
                 <div class="welcome-banner" style="display: flex; justify-content: space-between; align-items: center;">
                     <div class="welcome-content">
-                        <h2><i class="fas fa-chart-line"></i> Welcome Back, <span id="welcomeName"><?php echo $_SESSION['name']; ?></span>!</h2>
+                        <h2><i class="fas fa-chart-line"></i> Welcome Back, <span id="welcomeName"><?php echo isset($_SESSION['name']) ? htmlspecialchars($_SESSION['name']) : 'Administrator'; ?></span>!</h2>
                         <p>Here's what's happening with your store today.</p>
                     </div>
                     <div style="display: flex; align-items: center; gap: 20px;">
@@ -197,7 +221,7 @@ if ($result) {
                             <i class="fas fa-rupee-sign"></i>
                         </div>
                         <div class="stat-info">
-                            <h3>Rs <?php echo number_format($total_sales, 0); ?></h3>
+                            <h3>PKR <?php echo number_format($total_sales, 0); ?></h3>
                             <p>Total Sales</p>
                             <small style="color: #888; font-size: 0.8em;">View Analytics <i class="fas fa-arrow-right"></i></small>
                         </div>
@@ -313,10 +337,13 @@ if ($result) {
                                 <tbody id="recentOrders">
                                     <?php foreach ($recent_orders as $order) { ?>
                                     <tr>
-                                        <td>#<?php echo $order['id']; ?></td>
-                                        <td><?php echo $order['customer_name']; ?></td>
-                                        <td>Rs <?php echo number_format($order['total_amount'], 0); ?></td>
-                                        <td><span class="status-badge <?php echo strtolower($order['status']); ?>"><?php echo $order['status']; ?></span></td>
+                                        <td>#<?php echo isset($order['id']) ? $order['id'] : 'N/A'; ?></td>
+                                        <td><?php echo isset($order['customer_name']) ? htmlspecialchars($order['customer_name']) : 'Guest Customer'; ?></td>
+                                        <td>PKR <?php 
+                                            $amount = isset($order['final_amount']) ? $order['final_amount'] : (isset($order['total_amount']) ? $order['total_amount'] : 0);
+                                            echo number_format($amount, 0); 
+                                        ?></td>
+                                        <td><span class="status-badge <?php echo isset($order['status']) ? strtolower($order['status']) : 'pending'; ?>"><?php echo isset($order['status']) ? $order['status'] : 'Pending'; ?></span></td>
                                     </tr>
                                     <?php } ?>
                                     <?php if (empty($recent_orders)) { ?>

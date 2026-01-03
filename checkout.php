@@ -4,7 +4,7 @@ require_once 'admin-api/db_connect.php';
 
 // Check if user is logged in
 if (!isset($_SESSION['user_id'])) {
-    header('Location: login.html');
+    header('Location: login.php');
     exit;
 }
 
@@ -283,9 +283,75 @@ $total = $subtotal + $tax + $shipping;
     </div>
 
     <!-- FOOTER -->
-    <footer class="bg-dark text-white py-4">
-        <div class="container text-center">
-            <p>&copy; 2026 Trendy Wear. All rights reserved.</p>
+    <footer class="footer-section">
+        <div class="container">
+            <div class="footer-content py-5">
+                <div class="row g-4">
+                    <!-- Brand Column -->
+                    <div class="col-lg-4 col-md-6">
+                        <h5 class="footer-title mb-4">About Us</h5>
+                        <p class="footer-description mb-4">Your destination for trendy and affordable fashion. Discover your style, define your elegance.</p>
+                        <div class="social-links">
+                            <a href="#" class="social-icon" aria-label="Facebook"><i class="fab fa-facebook-f"></i></a>
+                            <a href="#" class="social-icon" aria-label="Instagram"><i class="fab fa-instagram"></i></a>
+                            <a href="#" class="social-icon" aria-label="Twitter"><i class="fab fa-twitter"></i></a>
+                            <a href="#" class="social-icon" aria-label="Pinterest"><i class="fab fa-pinterest-p"></i></a>
+                        </div>
+                    </div>
+
+                    <!-- Quick Links Column -->
+                    <div class="col-lg-2 col-md-6">
+                        <h5 class="footer-title mb-4">Quick Links</h5>
+                        <ul class="footer-links list-unstyled">
+                            <li><a href="index.php"><i class="fas fa-chevron-right"></i> Home</a></li>
+                            <li><a href="products.php"><i class="fas fa-chevron-right"></i> Products</a></li>
+                            <li><a href="about.html"><i class="fas fa-chevron-right"></i> About Us</a></li>
+                            <li><a href="contact.html"><i class="fas fa-chevron-right"></i> Contact</a></li>
+                        </ul>
+                    </div>
+
+                    <!-- Shop Categories Column -->
+                    <div class="col-lg-3 col-md-6">
+                        <h5 class="footer-title mb-4">Shop By</h5>
+                        <ul class="footer-links list-unstyled">
+                            <li><a href="products.php?gender=Men"><i class="fas fa-chevron-right"></i> Men's Collection</a></li>
+                            <li><a href="products.php?gender=Women"><i class="fas fa-chevron-right"></i> Women's Collection</a></li>
+                            <li><a href="products.php?gender=Kids"><i class="fas fa-chevron-right"></i> Kids Collection</a></li>
+                            <li><a href="orders.php"><i class="fas fa-chevron-right"></i> My Orders</a></li>
+                        </ul>
+                    </div>
+
+                    <!-- Contact Info Column -->
+                    <div class="col-lg-3 col-md-6">
+                        <h5 class="footer-title mb-4">Contact Info</h5>
+                        <ul class="footer-contact list-unstyled">
+                            <li>
+                                <i class="fas fa-map-marker-alt"></i>
+                                <span>123 Fashion Street<br>Style City, SC 12345</span>
+                            </li>
+                            <li>
+                                <i class="fas fa-phone"></i>
+                                <span>(123) 456-7890</span>
+                            </li>
+                            <li>
+                                <i class="fas fa-envelope"></i>
+                                <span>info@trendywear.com</span>
+                            </li>
+                            <li>
+                                <i class="fas fa-clock"></i>
+                                <span>Mon - Sat: 9AM - 8PM</span>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Footer Bottom -->
+            <div class="footer-bottom py-4">
+                <div class="text-center">
+                    <p class="mb-0">&copy; 2026 <strong>Trendy Wear</strong>. All rights reserved.</p>
+                </div>
+            </div>
         </div>
     </footer>
 

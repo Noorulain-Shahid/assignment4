@@ -5,7 +5,8 @@ header('Access-Control-Allow-Origin: *');
 header('Access-Control-Allow-Methods: POST');
 header('Access-Control-Allow-Headers: Content-Type');
 
-require_once '../admin-api/db_connect.php';
+mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
+require_once 'admin-api/db_connect.php';
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     http_response_code(405);
@@ -21,23 +22,44 @@ if (!$input) {
     exit;
 }
 
-// Extract form data
+// Extract form data (align with current users table: username, email, password, role, full_name, phone, address, city, postal_code)
+$fullName = trim($input['full_name'] ?? '');
 $firstName = trim($input['firstName'] ?? '');
 $lastName = trim($input['lastName'] ?? '');
 $email = trim($input['email'] ?? '');
 $password = $input['password'] ?? '';
-$confirmPassword = $input['confirmPassword'] ?? '';
+$confirmPassword = $input['confirmPassword'] ?? ($input['confirm_password'] ?? '');
 $phone = trim($input['phone'] ?? '');
 $address = trim($input['address'] ?? '');
 $city = trim($input['city'] ?? '');
-$state = trim($input['state'] ?? '');
-$zipcode = trim($input['zipcode'] ?? '');
-$country = trim($input['country'] ?? '');
+$postalCode = trim($input['postal_code'] ?? $input['zipcode'] ?? '');
+$username = trim($input['username'] ?? ($email ? explode('@', $email)[0] : ''));
+$role = 'customer';
+
+// Build full name if missing but first/last exist
+if (empty($fullName) && ($firstName || $lastName)) {
+    $fullName = trim($firstName . ' ' . $lastName);
+}
+// If still empty, fall back to username/email
+if (empty($fullName)) {
+    $fullName = $username ?: $email;
+}
 
 // Basic validation
-if (empty($firstName) || empty($lastName) || empty($email) || empty($password)) {
-    echo json_encode(['success' => false, 'message' => 'Please fill in all required fields']);
+$missingFields = [];
+if (empty($email)) $missingFields[] = 'Email';
+if (empty($password)) $missingFields[] = 'Password';
+if (empty($fullName)) $missingFields[] = 'Full Name';
+if (empty($username)) $missingFields[] = 'Username';
+
+if (!empty($missingFields)) {
+    echo json_encode(['success' => false, 'message' => 'Please fill in all required fields: ' . implode(', ', $missingFields)]);
     exit;
+}
+
+// If confirm password is empty, trust the already validated frontend and mirror password
+if ($confirmPassword === '') {
+    $confirmPassword = $password;
 }
 
 if ($password !== $confirmPassword) {
@@ -70,28 +92,27 @@ try {
     // Hash password
     $hashedPassword = password_hash($password, PASSWORD_DEFAULT);
     
-    // Insert new user
-    $stmt = $conn->prepare("INSERT INTO users (first_name, last_name, email, password, phone, address, city, state, zipcode, country) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
-    $stmt->bind_param("ssssssssss", $firstName, $lastName, $email, $hashedPassword, $phone, $address, $city, $state, $zipcode, $country);
+    // Insert new user (matching current schema)
+    $stmt = $conn->prepare("INSERT INTO users (username, email, password, role, full_name, phone, address, city, postal_code) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
+    $stmt->bind_param("sssssssss", $username, $email, $hashedPassword, $role, $fullName, $phone, $address, $city, $postalCode);
     
     if ($stmt->execute()) {
         // Start session
         $userId = $conn->insert_id;
         $_SESSION['user_id'] = $userId;
         $_SESSION['user_email'] = $email;
-        $_SESSION['user_name'] = $firstName . ' ' . $lastName;
+        $_SESSION['user_name'] = $fullName;
         
         echo json_encode([
             'success' => true,
             'message' => 'Account created successfully! Welcome to Trendy Wear.',
             'user' => [
                 'id' => $userId,
-                'first_name' => $firstName,
-                'last_name' => $lastName,
+                'username' => $username,
                 'email' => $email,
-                'name' => $firstName . ' ' . $lastName
+                'name' => $fullName
             ],
-            'redirect' => 'home.html'
+            'redirect' => 'index.php'
         ]);
     } else {
         echo json_encode(['success' => false, 'message' => 'Error creating account. Please try again.']);
@@ -102,7 +123,7 @@ try {
     
 } catch (Exception $e) {
     error_log("Signup error: " . $e->getMessage());
-    echo json_encode(['success' => false, 'message' => 'Server error. Please try again later.']);
+    echo json_encode(['success' => false, 'message' => 'Server error: ' . $e->getMessage()]);
 }
 
 $conn->close();

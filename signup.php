@@ -3,9 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login - Trendy Wear</title>
-    <link rel="shortcut icon" href="images/logo.png?v=1">
-    <link rel="icon" type="image/x-icon" href="images/logo.png?v=1">
+    <title>Sign Up - Trendy Wear</title>
+    <link rel="icon" type="image/png" href="images/logo.png">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="css/styles.css">
@@ -51,7 +50,7 @@
                         </ul>
                     </li>
                     <li class="nav-item"><a href="contact.html" class="nav-link">Contact Us</a></li>
-                    <li class="nav-item"><a href="login.php" class="nav-link active"><i class="fas fa-user"></i> Login</a></li>
+                    <li class="nav-item"><a href="login.php" class="nav-link"><i class="fas fa-user"></i> Login</a></li>
                 </ul>
             </div>
             
@@ -61,75 +60,110 @@
         </div>
     </nav>
 
-    <!-- LOGIN FORM SECTION -->
     <section class="auth-section">
-        <div class="auth-container">
-            <div class="auth-image">
-                <img src="images/login page.png" alt="Fashion" onerror="this.src='https://via.placeholder.com/600x800/F5F5DC/3E3E3E?text=Trendy+Wear'">
-                <div class="auth-overlay">
-                    <h2>Welcome Back!</h2>
-                    <p>Login to continue your fashion journey</p>
-                </div>
-            </div>
-            
+        <div class="auth-container signup-only">
             <div class="auth-form-container">
-                <h1>Login</h1>
-                <p class="auth-subtitle">Enter your credentials to access your account</p>
+                <h1>Create Account</h1>
+                <p class="auth-subtitle">Sign up to start shopping</p>
                 
-                <form id="loginForm" class="auth-form">
+                <form id="signupForm" class="auth-form">
                     <div class="form-row">
                         <div class="form-group">
-                            <label for="email"><i class="fas fa-envelope"></i> Email Address</label>
-                            <input type="email" id="email" name="email" required>
-                            <span class="error-message" id="emailError"></span>
+                            <label for="fullName"><i class="fas fa-user"></i> Full Name</label>
+                            <input type="text" id="fullName" name="fullName" required aria-describedby="fullNameError">
+                            <span class="error-message" id="fullNameError" role="alert" aria-live="assertive"></span>
                         </div>
                     </div>
-                    
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="email"><i class="fas fa-envelope"></i> Email</label>
+                            <input type="email" id="email" name="email" required aria-describedby="emailError">
+                            <span class="error-message" id="emailError" role="alert" aria-live="assertive"></span>
+                        </div>
+                    </div>
+
                     <div class="form-row">
                         <div class="form-group">
                             <label for="password"><i class="fas fa-lock"></i> Password</label>
                             <div class="password-wrapper">
-                                <input type="password" id="password" name="password" required>
+                                <input type="password" id="password" name="password" required aria-describedby="passwordError">
                                 <i class="fas fa-eye toggle-password" onclick="togglePassword('password')"></i>
                             </div>
-                            <span class="error-message" id="passwordError"></span>
+                            <div id="passwordStrength" class="password-strength" aria-hidden="true"></div>
+                            <span class="error-message" id="passwordError" role="alert" aria-live="assertive"></span>
                         </div>
                     </div>
-                    
+
                     <div class="form-row">
-                        <div class="remember-forgot">
-                            <div class="remember-me">
-                                <input type="checkbox" id="rememberMe" name="rememberMe">
-                                <label for="rememberMe">Remember Me</label>
+                        <div class="form-group">
+                            <label for="confirmPassword"><i class="fas fa-lock"></i> Confirm Password</label>
+                            <div class="password-wrapper">
+                                <input type="password" id="confirmPassword" name="confirmPassword" required aria-describedby="confirmPasswordError">
+                                <i class="fas fa-eye toggle-password" onclick="togglePassword('confirmPassword')"></i>
                             </div>
-                            <a href="https://support.google.com/accounts/answer/41078" class="forgot-password">Forgot Password?</a>
+                            <span class="error-message" id="confirmPasswordError" role="alert" aria-live="assertive"></span>
                         </div>
                     </div>
-                    
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="gender"><i class="fas fa-venus-mars"></i> Gender</label>
+                            <select id="gender" name="gender" required aria-describedby="genderError">
+                                <option value="">Select Gender</option>
+                                <option value="Male">Male</option>
+                                <option value="Female">Female</option>
+                                <option value="Other">Other</option>
+                            </select>
+                            <span class="error-message" id="genderError" role="alert" aria-live="assertive"></span>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="dob"><i class="fas fa-calendar"></i> Date of Birth</label>
+                            <input type="date" id="dob" name="dob" required aria-describedby="dobError">
+                            <span class="error-message" id="dobError" role="alert" aria-live="assertive"></span>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="phone"><i class="fas fa-phone"></i> Phone Number</label>
+                            <input type="tel" id="phone" name="phone" required aria-describedby="phoneError" placeholder="+92 300 0000000" inputmode="tel">
+                            <span class="error-message" id="phoneError" role="alert" aria-live="assertive"></span>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="address"><i class="fas fa-home"></i> Address</label>
+                            <textarea id="address" name="address" rows="3" required aria-describedby="addressError"></textarea>
+                            <span class="error-message" id="addressError" role="alert" aria-live="assertive"></span>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="checkbox-group">
+                            <input type="checkbox" id="terms" name="terms" required aria-describedby="termsError">
+                            <label for="terms">I agree to the <a href="#">Terms and Conditions</a> and <a href="#">Privacy Policy</a></label>
+                        </div>
+                        <span class="error-message" id="termsError" role="alert" aria-live="assertive"></span>
+                    </div>
+
                     <button type="submit" class="auth-btn">
-                        <i class="fas fa-sign-in-alt"></i> Login
+                        <i class="fas fa-user-plus"></i> Create Account
                     </button>
                 </form>
                 
-                <div class="social-login">
-                    <p class="social-login-title">Or continue with</p>
-                    <div class="social-buttons">
-                        <a href="https://accounts.google.com/" class="social-btn">
-                            <i class="fab fa-google"></i> Google
-                        </a>
-                        <a href="https://www.facebook.com" class="social-btn">
-                            <i class="fab fa-facebook"></i> Facebook
-                        </a>
-                    </div>
-                </div>
-                
                 <div class="auth-footer">
-                    <p>Don't have an account? <a href="signup.php">Sign Up</a></p>
+                    <p>Already have an account? <a href="login.php">Login</a></p>
                 </div>
             </div>
         </div>
     </section>
-<!-- FOOTER -->
+
+    <!-- FOOTER -->
     <footer class="footer bg-dark text-white py-5">
         <div class="container">
             <div class="row g-4 footer-content">
@@ -173,6 +207,6 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
     <script src="js/api.js"></script>
     <script src="js/script.js"></script>
-    <script src="js/login.js"></script>
+    <script src="js/signup-new.js"></script>
 </body>
 </html>

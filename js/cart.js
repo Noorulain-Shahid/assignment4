@@ -21,11 +21,11 @@ function updateCheckoutState() {
 
     if (!session) {
         if (noticeEl) {
-            noticeEl.innerHTML = `<div class="alert alert-info" role="status">You're not logged in — your cart is saved locally. <a href="login.html">Login</a> to proceed to checkout.</div>`;
+            noticeEl.innerHTML = `<div class="alert alert-info" role="status">You're not logged in — your cart is saved locally. <a href="login.php">Login</a> to proceed to checkout.</div>`;
         }
         checkoutBtn.disabled = true;
         checkoutBtn.innerHTML = '<i class="fas fa-lock"></i> Login to Checkout';
-        checkoutBtn.onclick = function() { window.location.href = 'login.html'; };
+        checkoutBtn.onclick = function() { window.location.href = 'login.php'; };
     } else {
         if (noticeEl) noticeEl.innerHTML = '';
         checkoutBtn.disabled = false;
@@ -316,7 +316,7 @@ function proceedToCheckout() {
     if (!session) {
         showNotification('Please login to proceed to checkout', 'error');
         setTimeout(() => {
-            window.location.href = 'login.html';
+            window.location.href = 'login.php';
         }, 1500);
         return;
     }

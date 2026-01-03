@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Order JavaScript Test</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body { padding: 20px; font-family: Arial, sans-serif; }
+        .test-section { margin: 20px 0; padding: 15px; border: 1px solid #ccc; }
+        .response { margin: 10px 0; padding: 10px; background: #f8f9fa; border-radius: 5px; }
+        .error { background: #ffe6e6; border: 1px solid #ff0000; }
+        .success { background: #e6ffe6; border: 1px solid #00aa00; }
+    </style>
+</head>
+<body>
+    <h1>JavaScript Order Test</h1>
+    
+    <div class="test-section">
+        <h3>Test 1: Direct API Call</h3>
+        <button onclick="testDirectAPI()" class="btn btn-primary">Test Direct API Call</button>
+        <div id="directResult" class="response"></div>
+    </div>
+    
+    <div class="test-section">
+        <h3>Test 2: Fetch API Call</h3>
+        <button onclick="testFetchAPI()" class="btn btn-secondary">Test Fetch API</button>
+        <div id="fetchResult" class="response"></div>
+    </div>
+    
+    <div class="test-section">
+        <h3>Test 3: XMLHttpRequest</h3>
+        <button onclick="testXHR()" class="btn btn-info">Test XMLHttpRequest</button>
+        <div id="xhrResult" class="response"></div>
+    </div>
+
+    <script>
+        // Test 1: Direct API call with detailed logging
+        async function testDirectAPI() {
+            const resultDiv = document.getElementById('directResult');
+            resultDiv.innerHTML = 'Testing...';
+            
+            try {
+                console.log('Starting direct API test...');
+                
+                const response = await fetch('place_order_debug.php', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        payment_method: 'cash_on_delivery'
+                    }),
+                    credentials: 'same-origin'
+                });
+                
+                console.log('Response received:', response);
+                console.log('Response status:', response.status);
+                console.log('Response headers:', [...response.headers.entries()]);
+                
+                const responseText = await response.text();
+                console.log('Response text:', responseText);
+                
+                let data;
+                try {
+                    data = JSON.parse(responseText);
+                } catch (e) {
+                    throw new Error('Invalid JSON response: ' + responseText);
+                }
+                
+                if (data.success) {
+                    resultDiv.className = 'response success';
+                    resultDiv.innerHTML = '<strong>Success!</strong><br>' + JSON.stringify(data, null, 2);
+                } else {
+                    resultDiv.className = 'response error';
+                    resultDiv.innerHTML = '<strong>Error:</strong> ' + (data.message || 'Unknown error') + '<br>' + JSON.stringify(data, null, 2);
+                }
+                
+            } catch (error) {
+                console.error('API test error:', error);
+                resultDiv.className = 'response error';
+                resultDiv.innerHTML = '<strong>Exception:</strong> ' + error.message;
+            }
+        }
+        
+        // Test 2: Fetch API (like the cart.php uses)
+        async function testFetchAPI() {
+            const resultDiv = document.getElementById('fetchResult');
+            resultDiv.innerHTML = 'Testing...';
+            
+            try {
+                const response = await fetch('place_order_api.php', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        payment_method: 'cash_on_delivery'
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    resultDiv.className = 'response success';
+                    resultDiv.innerHTML = '<strong>Success!</strong><br>' + JSON.stringify(data, null, 2);
+                } else {
+                    resultDiv.className = 'response error';
+                    resultDiv.innerHTML = '<strong>Error:</strong> ' + (data.message || 'Unknown error') + '<br>' + JSON.stringify(data, null, 2);
+                }
+                
+            } catch (error) {
+                console.error('Fetch API error:', error);
+                resultDiv.className = 'response error';
+                resultDiv.innerHTML = '<strong>Exception:</strong> ' + error.message;
+            }
+        }
+        
+        // Test 3: XMLHttpRequest
+        function testXHR() {
+            const resultDiv = document.getElementById('xhrResult');
+            resultDiv.innerHTML = 'Testing...';
+            
+            const xhr = new XMLHttpRequest();
+            xhr.open('POST', 'place_order_api.php', true);
+            xhr.setRequestHeader('Content-Type', 'application/json');
+            
+            xhr.onload = function() {
+                try {
+                    const data = JSON.parse(xhr.responseText);
+                    
+                    if (data.success) {
+                        resultDiv.className = 'response success';
+                        resultDiv.innerHTML = '<strong>Success!</strong><br>' + JSON.stringify(data, null, 2);
+                    } else {
+                        resultDiv.className = 'response error';
+                        resultDiv.innerHTML = '<strong>Error:</strong> ' + (data.message || 'Unknown error') + '<br>' + JSON.stringify(data, null, 2);
+                    }
+                } catch (e) {
+                    resultDiv.className = 'response error';
+                    resultDiv.innerHTML = '<strong>Parse Error:</strong> ' + e.message + '<br>Response: ' + xhr.responseText;
+                }
+            };
+            
+            xhr.onerror = function() {
+                resultDiv.className = 'response error';
+                resultDiv.innerHTML = '<strong>Network Error:</strong> ' + xhr.status;
+            };
+            
+            xhr.send(JSON.stringify({
+                payment_method: 'cash_on_delivery'
+            }));
+        }
+        
+        // Auto-run first test on page load
+        window.onload = function() {
+            console.log('Page loaded, running initial test...');
+            testDirectAPI();
+        };
+    </script>
+</body>
+</html>

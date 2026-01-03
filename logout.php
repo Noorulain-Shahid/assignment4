@@ -1,10 +1,21 @@
 <?php
 session_start();
-
-// Destroy the session
 session_destroy();
-
-// Redirect to home page
-header('Location: index.php');
-exit;
 ?>
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Logging out...</title>
+</head>
+<body>
+    <script>
+        // Clear client-side session storage
+        localStorage.removeItem('userSession');
+        localStorage.removeItem('sessionToken');
+        sessionStorage.removeItem('userSession');
+        
+        // Redirect to login page
+        window.location.href = 'login.php';
+    </script>
+</body>
+</html>

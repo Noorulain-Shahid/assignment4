@@ -8,7 +8,7 @@ document.addEventListener('DOMContentLoaded', function() {
     if (!session) {
         showNotification('Please login to view your orders', 'error');
         setTimeout(() => {
-            window.location.href = 'login.html';
+            window.location.href = 'login.php';
         }, 1500);
         return;
     }

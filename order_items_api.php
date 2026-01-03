@@ -5,7 +5,7 @@ header('Access-Control-Allow-Origin: *');
 header('Access-Control-Allow-Methods: GET');
 header('Access-Control-Allow-Headers: Content-Type');
 
-require_once '../admin-api/db_connect.php';
+require_once 'admin-api/db_connect.php';
 
 // Check if user is logged in
 if (!isset($_SESSION['user_id'])) {
@@ -38,9 +38,11 @@ try {
     
     // Get order items
     $itemsStmt = $conn->prepare("
-        SELECT oi.*, p.name, p.image_url 
+        SELECT oi.*, 
+               COALESCE(oi.product_name, p.name) as name,
+               COALESCE(oi.product_image, p.image_url) as image_url
         FROM order_items oi 
-        JOIN products p ON oi.product_id = p.id 
+        LEFT JOIN products p ON oi.product_id = p.id 
         WHERE oi.order_id = ?
         ORDER BY oi.id
     ");
@@ -50,7 +52,18 @@ try {
     
     $items = [];
     while ($row = $itemsResult->fetch_assoc()) {
-        $items[] = $row;
+        $items[] = [
+            'id' => $row['id'],
+            'product_id' => $row['product_id'],
+            'name' => $row['name'],
+            'price' => $row['price'],
+            'quantity' => $row['quantity'],
+            'total' => $row['subtotal'],
+            'subtotal' => $row['subtotal'],
+            'image_url' => $row['image_url'],
+            'size' => $row['size'] ?? null,
+            'color' => $row['color'] ?? null
+        ];
     }
     
     echo json_encode([

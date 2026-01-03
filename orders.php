@@ -3,35 +3,49 @@ session_start();
 require_once 'admin-api/db_connect.php';
 
 // Check if user is logged in
+// Redirect to login page if not logged in
 if (!isset($_SESSION['user_id'])) {
-    header('Location: login.html');
+    header('Location: login.php');
     exit;
 }
 
 $userId = $_SESSION['user_id'];
 
-// Get user's orders
-$ordersQuery = "SELECT o.*, COUNT(oi.id) as item_count 
-                FROM orders o 
-                LEFT JOIN order_items oi ON o.id = oi.order_id 
-                WHERE o.user_id = ? 
-                GROUP BY o.id 
-                ORDER BY o.created_at DESC";
-$ordersStmt = $conn->prepare($ordersQuery);
-$ordersStmt->bind_param("i", $userId);
-$ordersStmt->execute();
-$ordersResult = $ordersStmt->get_result();
+// Check if orders table exists
+$tablesQuery = "SHOW TABLES LIKE 'orders'";
+$tablesResult = $conn->query($tablesQuery);
+$ordersTableExists = $tablesResult->num_rows > 0;
+
 $orders = [];
-while ($row = $ordersResult->fetch_assoc()) {
-    $orders[] = $row;
+if ($ordersTableExists) {
+    // Get user's orders
+    $ordersQuery = "SELECT o.*, COUNT(oi.id) as item_count 
+                    FROM orders o 
+                    LEFT JOIN order_items oi ON o.id = oi.order_id 
+                    WHERE o.user_id = ? 
+                    GROUP BY o.id 
+                    ORDER BY o.created_at DESC";
+    $ordersStmt = $conn->prepare($ordersQuery);
+    $ordersStmt->bind_param("i", $userId);
+    $ordersStmt->execute();
+    $ordersResult = $ordersStmt->get_result();
+    while ($row = $ordersResult->fetch_assoc()) {
+        $orders[] = $row;
+    }
 }
 
-// Get categories for navigation
-$categoriesQuery = "SELECT * FROM categories WHERE is_active = 1 ORDER BY name";
+// Get categories for navigation (handle if categories table doesn't exist)
+$categoriesQuery = "SHOW TABLES LIKE 'categories'";
 $categoriesResult = $conn->query($categoriesQuery);
 $categories = [];
-while ($row = $categoriesResult->fetch_assoc()) {
-    $categories[] = $row;
+if ($categoriesResult->num_rows > 0) {
+    $categoriesQuery = "SELECT * FROM categories WHERE is_active = 1 ORDER BY name";
+    $categoriesResult = $conn->query($categoriesQuery);
+    if ($categoriesResult) {
+        while ($row = $categoriesResult->fetch_assoc()) {
+            $categories[] = $row;
+        }
+    }
 }
 ?>
 <!DOCTYPE html>
@@ -96,14 +110,18 @@ while ($row = $categoriesResult->fetch_assoc()) {
                     </li>
                 </ul>
             </div>
+            
+            <div class="menu-arrow-container">
+                <i class="fas fa-chevron-down menu-arrow"></i>
+            </div>
         </div>
     </nav>
 
     <!-- PAGE HERO -->
-    <section class="bg-light py-5 mt-5">
+    <section class="about-hero">
         <div class="container">
-            <h1 class="display-4 fw-bold text-center">My Orders</h1>
-            <p class="lead text-center text-muted">View and track your order history</p>
+            <h1 class="page-title">My Orders</h1>
+            <p class="page-subtitle">View and track your order history</p>
         </div>
     </section>
 
@@ -144,9 +162,7 @@ while ($row = $categoriesResult->fetch_assoc()) {
                                         </div>
                                         <div class="col-md-2">
                                             <small class="text-muted">Payment:</small><br>
-                                            <span class="badge bg-<?= $order['payment_status'] === 'completed' ? 'success' : 'warning' ?>">
-                                                <?= ucfirst(htmlspecialchars($order['payment_status'])) ?>
-                                            </span>
+                                            <span class="badge bg-success">Cash on Delivery</span>
                                         </div>
                                         <div class="col-md-2">
                                             <small class="text-muted">Items:</small><br>
@@ -154,7 +170,7 @@ while ($row = $categoriesResult->fetch_assoc()) {
                                         </div>
                                         <div class="col-md-2">
                                             <small class="text-muted">Total:</small><br>
-                                            <strong class="text-primary">$<?= number_format($order['total_amount'], 2) ?></strong>
+                                            <strong class="text-primary">PKR <?= number_format($order['final_amount'] ?? $order['total_amount'], 0) ?></strong>
                                         </div>
                                         <div class="col-md-1">
                                             <button class="btn btn-sm btn-outline-primary" 
@@ -184,23 +200,35 @@ while ($row = $categoriesResult->fetch_assoc()) {
                                             <div class="col-md-4">
                                                 <!-- Shipping Address -->
                                                 <?php 
+                                                // Try to decode JSON shipping address, or use the text directly
                                                 $shipping_address = json_decode($order['shipping_address'], true);
-                                                if ($shipping_address):
+                                                if (!$shipping_address && !empty($order['shipping_address'])) {
+                                                    // If not JSON, treat as plain text
+                                                    $shipping_address = ['address' => $order['shipping_address']];
+                                                }
+                                                if ($shipping_address || !empty($order['shipping_city'])):
                                                 ?>
                                                 <h6>Shipping Address:</h6>
                                                 <address class="small">
-                                                    <?= htmlspecialchars($shipping_address['first_name'] . ' ' . $shipping_address['last_name']) ?><br>
-                                                    <?= htmlspecialchars($shipping_address['address']) ?><br>
-                                                    <?= htmlspecialchars($shipping_address['city'] . ', ' . $shipping_address['state'] . ' ' . $shipping_address['zipcode']) ?><br>
-                                                    <?= htmlspecialchars($shipping_address['country']) ?>
+                                                    <?php if (isset($shipping_address['name'])): ?>
+                                                        <?= htmlspecialchars($shipping_address['name']) ?><br>
+                                                    <?php endif; ?>
+                                                    <?php if (isset($shipping_address['address'])): ?>
+                                                        <?= htmlspecialchars($shipping_address['address']) ?><br>
+                                                    <?php elseif (!empty($order['shipping_address'])): ?>
+                                                        <?= htmlspecialchars($order['shipping_address']) ?><br>
+                                                    <?php endif; ?>
+                                                    <?php if (!empty($order['shipping_city'])): ?>
+                                                        <?= htmlspecialchars($order['shipping_city']) ?>
+                                                        <?php if (!empty($order['shipping_postal_code'])): ?>
+                                                            <?= htmlspecialchars($order['shipping_postal_code']) ?>
+                                                        <?php endif; ?><br>
+                                                    <?php endif; ?>
                                                 </address>
                                                 <?php endif; ?>
                                                 
                                                 <!-- Order Actions -->
                                                 <div class="mt-3">
-                                                    <a href="order-details.php?id=<?= $order['id'] ?>" class="btn btn-outline-primary btn-sm mb-2 w-100">
-                                                        <i class="fas fa-eye me-1"></i>View Details
-                                                    </a>
                                                     
                                                     <?php if ($order['status'] === 'delivered'): ?>
                                                         <button class="btn btn-success btn-sm mb-2 w-100" onclick="reorderItems(<?= $order['id'] ?>)">
@@ -233,34 +261,74 @@ while ($row = $categoriesResult->fetch_assoc()) {
     </section>
 
     <!-- FOOTER -->
-    <footer class="bg-dark text-white py-5">
+    <footer class="footer-section">
         <div class="container">
-            <div class="row">
-                <div class="col-md-4">
-                    <h5>Trendy Wear</h5>
-                    <p>Your destination for trendy and affordable fashion.</p>
-                </div>
-                <div class="col-md-4">
-                    <h5>Customer Service</h5>
-                    <ul class="list-unstyled">
-                        <li><a href="contact.html" class="text-white-50">Contact Us</a></li>
-                        <li><a href="#" class="text-white-50">Shipping Info</a></li>
-                        <li><a href="#" class="text-white-50">Return Policy</a></li>
-                        <li><a href="#" class="text-white-50">Track Order</a></li>
-                    </ul>
-                </div>
-                <div class="col-md-4">
-                    <h5>Contact Info</h5>
-                    <p class="text-white-50">
-                        <i class="fas fa-envelope"></i> info@trendywear.com<br>
-                        <i class="fas fa-phone"></i> (123) 456-7890<br>
-                        <i class="fas fa-map-marker-alt"></i> 123 Fashion Street, Style City
-                    </p>
+            <div class="footer-content py-5">
+                <div class="row g-4">
+                    <!-- Brand Column -->
+                    <div class="col-lg-4 col-md-6">
+                        <h5 class="footer-title mb-4">About Us</h5>
+                        <p class="footer-description mb-4">Your destination for trendy and affordable fashion. Discover your style, define your elegance.</p>
+                        <div class="social-links">
+                            <a href="#" class="social-icon" aria-label="Facebook"><i class="fab fa-facebook-f"></i></a>
+                            <a href="#" class="social-icon" aria-label="Instagram"><i class="fab fa-instagram"></i></a>
+                            <a href="#" class="social-icon" aria-label="Twitter"><i class="fab fa-twitter"></i></a>
+                            <a href="#" class="social-icon" aria-label="Pinterest"><i class="fab fa-pinterest-p"></i></a>
+                        </div>
+                    </div>
+
+                    <!-- Quick Links Column -->
+                    <div class="col-lg-2 col-md-6">
+                        <h5 class="footer-title mb-4">Quick Links</h5>
+                        <ul class="footer-links list-unstyled">
+                            <li><a href="index.php"><i class="fas fa-chevron-right"></i> Home</a></li>
+                            <li><a href="products.php"><i class="fas fa-chevron-right"></i> Products</a></li>
+                            <li><a href="about.html"><i class="fas fa-chevron-right"></i> About Us</a></li>
+                            <li><a href="contact.html"><i class="fas fa-chevron-right"></i> Contact</a></li>
+                        </ul>
+                    </div>
+
+                    <!-- Shop Categories Column -->
+                    <div class="col-lg-3 col-md-6">
+                        <h5 class="footer-title mb-4">Shop By</h5>
+                        <ul class="footer-links list-unstyled">
+                            <li><a href="products.php?gender=Men"><i class="fas fa-chevron-right"></i> Men's Collection</a></li>
+                            <li><a href="products.php?gender=Women"><i class="fas fa-chevron-right"></i> Women's Collection</a></li>
+                            <li><a href="products.php?gender=Kids"><i class="fas fa-chevron-right"></i> Kids Collection</a></li>
+                            <li><a href="orders.php"><i class="fas fa-chevron-right"></i> My Orders</a></li>
+                        </ul>
+                    </div>
+
+                    <!-- Contact Info Column -->
+                    <div class="col-lg-3 col-md-6">
+                        <h5 class="footer-title mb-4">Contact Info</h5>
+                        <ul class="footer-contact list-unstyled">
+                            <li>
+                                <i class="fas fa-map-marker-alt"></i>
+                                <span>123 Fashion Street<br>Style City, SC 12345</span>
+                            </li>
+                            <li>
+                                <i class="fas fa-phone"></i>
+                                <span>(123) 456-7890</span>
+                            </li>
+                            <li>
+                                <i class="fas fa-envelope"></i>
+                                <span>info@trendywear.com</span>
+                            </li>
+                            <li>
+                                <i class="fas fa-clock"></i>
+                                <span>Mon - Sat: 9AM - 8PM</span>
+                            </li>
+                        </ul>
+                    </div>
                 </div>
             </div>
-            <hr class="my-4">
-            <div class="text-center">
-                <p>&copy; 2026 Trendy Wear. All rights reserved.</p>
+
+            <!-- Footer Bottom -->
+            <div class="footer-bottom py-4">
+                <div class="text-center">
+                    <p class="mb-0">&copy; 2026 <strong>Trendy Wear</strong>. All rights reserved.</p>
+                </div>
             </div>
         </div>
     </footer>
@@ -297,7 +365,7 @@ while ($row = $categoriesResult->fetch_assoc()) {
             const itemsContainer = document.getElementById(`items-${orderId}`);
             
             try {
-                const response = await fetch(`api/order-items.php?order_id=${orderId}`);
+                const response = await fetch(`order_items_api.php?order_id=${orderId}`);
                 const data = await response.json();
                 
                 if (data.success) {
@@ -315,8 +383,8 @@ while ($row = $categoriesResult->fetch_assoc()) {
                                     </small>
                                 </div>
                                 <div class="text-end">
-                                    <small class="text-muted">$${parseFloat(item.price).toFixed(2)} each</small><br>
-                                    <span class="fw-bold">$${parseFloat(item.total).toFixed(2)}</span>
+                                    <small class="text-muted">PKR ${parseFloat(item.price).toFixed(0)} each</small><br>
+                                    <span class="fw-bold">PKR ${parseFloat(item.subtotal || item.total).toFixed(0)}</span>
                                 </div>
                             </div>
                         `;
@@ -337,7 +405,7 @@ while ($row = $categoriesResult->fetch_assoc()) {
             if (!confirm('Add all items from this order to your cart?')) return;
             
             try {
-                const response = await fetch('api/reorder.php', {
+                const response = await fetch('reorder_api.php', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ order_id: orderId })
@@ -361,7 +429,7 @@ while ($row = $categoriesResult->fetch_assoc()) {
             if (!confirm('Are you sure you want to cancel this order?')) return;
             
             try {
-                const response = await fetch('api/cancel-order.php', {
+                const response = await fetch('cancel_order_api.php', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ order_id: orderId })
@@ -388,7 +456,7 @@ while ($row = $categoriesResult->fetch_assoc()) {
         // Function to update cart count
         async function updateCartCount() {
             try {
-                const response = await fetch('api/cart.php');
+                const response = await fetch('cart_api.php');
                 const data = await response.json();
                 if (data.success) {
                     document.getElementById('cartCount').textContent = data.item_count;

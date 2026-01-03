@@ -6,7 +6,7 @@ require('db_connect.php');
 
 // Fetch all product reviews with user names
 $feedbacks = [];
-$query = "SELECT r.*, CONCAT(u.first_name, ' ', u.last_name) AS user_name
+$query = "SELECT r.*, COALESCE(u.full_name, u.username, 'Anonymous User') AS user_name
           FROM reviews r
           LEFT JOIN users u ON r.user_id = u.id
           ORDER BY r.created_at DESC";

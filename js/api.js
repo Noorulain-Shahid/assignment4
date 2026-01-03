@@ -1,10 +1,10 @@
-// API Base URL
-const API_BASE = 'api/';
+// API Base URL (root-level API scripts)
+const API_BASE = '';
 
 // Authentication Functions
 async function login(username, password) {
     try {
-        const response = await fetch(API_BASE + 'login.php', {
+        const response = await fetch(API_BASE + 'login_api.php', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ username, password })
@@ -26,7 +26,7 @@ async function login(username, password) {
 
 async function signup(userData) {
     try {
-        const response = await fetch(API_BASE + 'signup.php', {
+        const response = await fetch(API_BASE + 'signup_api.php', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(userData)
@@ -73,7 +73,7 @@ async function checkAuth() {
 async function getProducts(params = {}) {
     try {
         const queryString = new URLSearchParams(params).toString();
-        const response = await fetch(API_BASE + 'products.php?' + queryString);
+        const response = await fetch(API_BASE + 'products_api.php?' + queryString);
         const data = await response.json();
         return data;
     } catch (error) {
@@ -107,7 +107,7 @@ async function getCategories() {
 // Cart Functions
 async function getCart() {
     try {
-        const response = await fetch(API_BASE + 'cart.php');
+        const response = await fetch(API_BASE + 'cart_api.php');
         const data = await response.json();
         return data;
     } catch (error) {
@@ -118,7 +118,7 @@ async function getCart() {
 
 async function addToCartAPI(productId, quantity = 1, size = '', color = '') {
     try {
-        const response = await fetch(API_BASE + 'cart.php', {
+        const response = await fetch(API_BASE + 'cart_api.php', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ product_id: productId, quantity, size, color })
@@ -133,7 +133,7 @@ async function addToCartAPI(productId, quantity = 1, size = '', color = '') {
 
 async function updateCartItem(cartId, quantity) {
     try {
-        const response = await fetch(API_BASE + 'cart.php', {
+        const response = await fetch(API_BASE + 'cart_api.php', {
             method: 'PUT',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ cart_id: cartId, quantity })
@@ -148,7 +148,7 @@ async function updateCartItem(cartId, quantity) {
 
 async function removeCartItem(cartId) {
     try {
-        const response = await fetch(API_BASE + 'cart.php?cart_id=' + cartId, {
+        const response = await fetch(API_BASE + 'cart_api.php?cart_id=' + cartId, {
             method: 'DELETE'
         });
         const data = await response.json();
@@ -199,7 +199,7 @@ async function getOrderDetail(orderId) {
 
 async function reorder(orderId) {
     try {
-        const response = await fetch(API_BASE + 'reorder.php', {
+        const response = await fetch(API_BASE + 'reorder_api.php', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ order_id: orderId })
@@ -251,7 +251,7 @@ function getCurrentUser() {
 }
 
 function updateAuthUI() {
-    const loginLink = document.querySelector('a[href="login.html"]');
+    const loginLink = document.querySelector('a[href="login.php"]');
     if (!loginLink) return;
     
     if (isLoggedIn()) {
@@ -264,7 +264,7 @@ function updateAuthUI() {
             dropdown.className = 'dropdown-menu show position-absolute';
             dropdown.style.cssText = 'right: 0; top: 100%;';
             dropdown.innerHTML = `
-                <a class="dropdown-item" href="#" onclick="window.location.href='orders.html'">My Orders</a>
+                <a class="dropdown-item" href="#" onclick="window.location.href='orders.php'">My Orders</a>
                 <a class="dropdown-item" href="#" onclick="logout()">Logout</a>
             `;
             loginLink.parentElement.style.position = 'relative';

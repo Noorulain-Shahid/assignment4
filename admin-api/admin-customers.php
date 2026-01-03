@@ -21,12 +21,12 @@ if ($total_result) {
 // Fetch Users (Frontend Customers) with order count
 $customers = [];
 $query = "SELECT u.*, 
-          CONCAT(u.first_name, ' ', u.last_name) as full_name,
+          CONCAT(COALESCE(u.first_name, ''), ' ', COALESCE(u.last_name, '')) as display_name,
           COUNT(DISTINCT o.id) as order_count,
-          COALESCE(SUM(o.total_amount), 0) as total_spent
+          COALESCE(SUM(COALESCE(o.final_amount, o.total_amount, 0)), 0) as total_spent
           FROM users u 
           LEFT JOIN orders o ON u.id = o.user_id
-          WHERE u.is_active = 1 
+          WHERE u.is_active = 1 OR u.is_active IS NULL
           GROUP BY u.id
           ORDER BY u.created_at DESC
           LIMIT $offset, $records_per_page";
@@ -139,12 +139,12 @@ if ($result) {
                             <tbody id="customersTable">
                                 <?php foreach ($customers as $customer) { ?>
                                 <tr>
-                                    <td><?php echo $customer['full_name']; ?></td>
-                                    <td><?php echo $customer['email']; ?></td>
-                                    <td><?php echo $customer['phone'] ?: 'N/A'; ?></td>
-                                    <td><?php echo ($customer['city'] ? $customer['city'] . ', ' : '') . ($customer['state'] ?: 'N/A'); ?></td>
+                                    <td><?php echo htmlspecialchars($customer['display_name']); ?></td>
+                                    <td><?php echo htmlspecialchars($customer['email']); ?></td>
+                                    <td><?php echo htmlspecialchars($customer['phone'] ?: 'N/A'); ?></td>
+                                    <td><?php echo htmlspecialchars(($customer['city'] ? $customer['city'] . ', ' : '') . ($customer['state'] ?: 'N/A')); ?></td>
                                     <td><span class="badge badge-info"><?php echo $customer['order_count']; ?></span></td>
-                                    <td><span class="badge badge-success">$<?php echo number_format($customer['total_spent'], 2); ?></span></td>
+                                    <td><span class="badge badge-success">PKR <?php echo number_format($customer['total_spent'], 0); ?></span></td>
                                     <td><?php echo date('M j, Y', strtotime($customer['created_at'])); ?></td>
                                 </tr>
                                 <?php } ?>

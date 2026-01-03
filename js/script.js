@@ -15,6 +15,7 @@ const productsDB = {
 
 document.addEventListener('DOMContentLoaded', function() {
     updateCartCount();
+    syncLocalCartToServer();
     
     document.querySelectorAll('a[href^="#"]').forEach(anchor => {
         anchor.addEventListener('click', function (e) {
@@ -48,9 +49,51 @@ document.addEventListener('DOMContentLoaded', function() {
     attachCartLinkZeroing();
 });
 
+function getStoredSession() {
+    try {
+        return JSON.parse(localStorage.getItem('userSession') || sessionStorage.getItem('userSession') || 'null');
+    } catch (e) {
+        return null;
+    }
+}
+
+async function syncLocalCartToServer() {
+    const localCart = JSON.parse(localStorage.getItem('cart') || '[]');
+    if (!localCart || localCart.length === 0) return;
+
+    // Verify server session by probing cart API; if unauthenticated it returns 401
+    let serverSessionActive = false;
+    try {
+        const probe = await getCart();
+        if (probe && probe.success !== false) {
+            serverSessionActive = true;
+        }
+    } catch (e) {
+        serverSessionActive = false;
+    }
+
+    if (!serverSessionActive) return;
+
+    const session = getStoredSession();
+    const syncKey = session && session.id ? `synced-${session.id}` : null;
+    if (syncKey && localStorage.getItem('cartSyncedFor') === syncKey) return;
+
+    for (const item of localCart) {
+        try {
+            await addToCartAPI(item.id, item.quantity || 1, item.size || '', item.color || '');
+        } catch (err) {
+            console.error('Cart sync failed for item', item.id, err);
+        }
+    }
+
+    localStorage.removeItem('cart');
+    if (syncKey) localStorage.setItem('cartSyncedFor', syncKey);
+    await updateCartCount(true);
+}
+
 function attachCartLinkZeroing() {
     try {
-        const cartLinks = Array.from(document.querySelectorAll('a[href*="cart.html"]'));
+        const cartLinks = Array.from(document.querySelectorAll('a[href*="cart.php"]'));
         cartLinks.forEach(link => {
             link.addEventListener('click', () => {
                 const badge = document.getElementById('cartCount');
@@ -89,29 +132,15 @@ function renderUserAvatarInNavbar() {
         const navbar = document.getElementById('navbar');
         if (!navbar) return;
 
-        let loginLink = navbar.querySelector('a[href*="login.html"]');
+        let loginLink = navbar.querySelector('a[href*="login.php"]');
         if (!loginLink) {
             loginLink = navbar.querySelector('a .fa-user') ? navbar.querySelector('a .fa-user').closest('a') : null;
         }
 
         const wrapper = document.createElement('a');
-        wrapper.className = 'nav-link nav-avatar';
-        wrapper.href = 'orders.html';
-        wrapper.title = `Signed in as ${session.fullName || session.email}`;
-
-        const img = document.createElement('img');
-        img.alt = session.fullName || session.email;
-        img.width = 36;
-        img.height = 36;
-        img.className = 'rounded-circle';
-
-        const gravatarUrl = getGravatarUrl(session.email, 80);
-        img.src = gravatarUrl + '&d=404';
-        img.addEventListener('error', function() {
-            img.src = getInitialsDataUrl(session.fullName || session.email);
-        });
-
-        wrapper.appendChild(img);
+        wrapper.className = 'nav-link';
+        wrapper.href = 'logout.php';
+        wrapper.innerHTML = '<i class="fas fa-sign-out-alt"></i> Logout';
 
         if (loginLink && loginLink.parentElement) {
             loginLink.parentElement.replaceChild(wrapper, loginLink);
@@ -256,15 +285,27 @@ function getInitialsDataUrl(name) {
     return 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(svg);
 }
 
-function addToCart(productId) {
+async function addToCart(productId) {
     const product = (window.allProducts && window.allProducts.find(p => p.id === productId)) || productsDB[productId];
     if (!product) {
         showNotification('Product not found!', 'error');
         return;
     }
 
+    // Always try server cart first; fall back to local if unauthenticated or server fails
+    try {
+        const apiResult = await addToCartAPI(productId, 1, '', '');
+        if (apiResult && apiResult.success) {
+            await updateCartCount(true);
+            showNotification(`${product.name} added to cart!`, 'success');
+            return;
+        }
+    } catch (err) {
+        console.warn('Add to cart via API failed; falling back to local storage.', err);
+    }
+
+    // Fallback for guest or server failure: local cart
     const existingItem = cart.find(item => item.id === productId);
-    
     if (existingItem) {
         existingItem.quantity++;
     } else {
@@ -276,22 +317,36 @@ function addToCart(productId) {
             quantity: 1
         });
     }
-    
     localStorage.setItem('cart', JSON.stringify(cart));
     updateCartCount();
-    showNotification(`${product.name} added to cart!`);
+    showNotification(`${product.name} added to cart!`, 'success');
 }
 
-function updateCartCount() {
+async function updateCartCount(forceApi = false) {
     const cartCountElement = document.getElementById('cartCount');
     if (!cartCountElement) return;
 
+    // Try backend count first (even if client session storage is missing)
     try {
-        const storedCart = JSON.parse(localStorage.getItem('cart')) || [];
+        const data = await getCart();
+        if (data && data.success) {
+            const count = data.item_count ?? (data.cart_items ? data.cart_items.reduce((s, i) => s + (i.quantity || 0), 0) : 0);
+            cartCountElement.textContent = count;
+            return count;
+        }
+    } catch (e) {
+        // Fall through to local storage
+    }
+
+    // Guest/local fallback
+    try {
+        const storedCart = JSON.parse(localStorage.getItem('cart') || '[]');
         const totalItems = storedCart.reduce((sum, item) => sum + (item.quantity || 0), 0);
         cartCountElement.textContent = totalItems;
+        return totalItems;
     } catch (e) {
         cartCountElement.textContent = '0';
+        return 0;
     }
 }
 
@@ -374,6 +429,7 @@ window.addEventListener('storage', function(e) {
         if (e.key === 'userSession' || e.key === 'userSession') {
             renderUserAvatarInNavbar();
             try { if (typeof updateCheckoutState === 'function') updateCheckoutState(); } catch (err) {}
+            syncLocalCartToServer();
         }
     } catch (err) {
         console.error('storage event handler error', err);
@@ -392,6 +448,9 @@ function moveCarousel(direction) {
     const totalItems = carousel.children.length;
     const visibleCount = 4; // Show 4 cards at a time
     const maxSlide = Math.max(0, totalItems - visibleCount); // Don't show empty slots
+
+    // Don't move if all items fit on one screen
+    if (totalItems <= visibleCount) return;
 
     currentSlide += direction;
 
@@ -415,11 +474,16 @@ function updateCarousel() {
 }
 
 function startAutoSlide() {
+    const carousel = document.querySelector('.products-carousel');
+    if (!carousel) return;
+    
+    const totalItems = carousel.children.length;
+    const visibleCount = 4;
+    
+    // Don't auto-slide if all items fit on one screen
+    if (totalItems <= visibleCount) return;
+    
     autoSlideInterval = setInterval(() => {
-        const carousel = document.querySelector('.products-carousel');
-        if (!carousel) return;
-        const totalItems = carousel.children.length;
-        const visibleCount = 4;
         const maxSlide = Math.max(0, totalItems - visibleCount);
 
         currentSlide++;
@@ -432,17 +496,32 @@ function startAutoSlide() {
 }
 
 if (document.querySelector('.products-carousel')) {
-    startAutoSlide();
+    const carousel = document.querySelector('.products-carousel');
+    const totalItems = carousel.children.length;
+    const visibleCount = 4;
+    
+    // Hide carousel controls if all items fit on one screen
+    const prevBtn = document.querySelector('.carousel-prev');
+    const nextBtn = document.querySelector('.carousel-next');
+    
+    if (totalItems <= visibleCount) {
+        if (prevBtn) prevBtn.classList.add('hidden');
+        if (nextBtn) nextBtn.classList.add('hidden');
+    } else {
+        if (prevBtn) prevBtn.classList.remove('hidden');
+        if (nextBtn) nextBtn.classList.remove('hidden');
+        startAutoSlide();
+        
+        const carouselWrapper = document.querySelector('.products-carousel-wrapper');
+        if (carouselWrapper) {
+            carouselWrapper.addEventListener('mouseenter', () => {
+                clearInterval(autoSlideInterval);
+            });
 
-    const carouselWrapper = document.querySelector('.products-carousel-wrapper');
-    if (carouselWrapper) {
-        carouselWrapper.addEventListener('mouseenter', () => {
-            clearInterval(autoSlideInterval);
-        });
-
-        carouselWrapper.addEventListener('mouseleave', () => {
-            startAutoSlide();
-        });
+            carouselWrapper.addEventListener('mouseleave', () => {
+                startAutoSlide();
+            });
+        }
     }
 }
 
