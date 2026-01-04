@@ -33,6 +33,25 @@ if ($featuredResult === false) {
     }
 }
 
+// Add one hat to featured products if not already present
+$hatQuery = "SELECT p.* FROM products p 
+             JOIN categories c ON p.category_id = c.id 
+             WHERE p.is_active = 1 AND c.name = 'Hat' 
+             LIMIT 1";
+$hatResult = $conn->query($hatQuery);
+if ($hatResult && $hatRow = $hatResult->fetch_assoc()) {
+    $isDuplicate = false;
+    foreach ($featuredProducts as $fp) {
+        if ($fp['id'] == $hatRow['id']) {
+            $isDuplicate = true;
+            break;
+        }
+    }
+    if (!$isDuplicate) {
+        $featuredProducts[] = $hatRow;
+    }
+}
+
 // Get categories
 $categories = [];
 $categoriesError = null;
@@ -262,10 +281,12 @@ if ($categoriesResult) {
                     <div class="col-lg-3 col-md-6">
                         <h5 class="footer-title mb-4">Shop By</h5>
                         <ul class="footer-links list-unstyled">
-                            <li><a href="products.php?gender=Men"><i class="fas fa-chevron-right"></i> Men's Collection</a></li>
-                            <li><a href="products.php?gender=Women"><i class="fas fa-chevron-right"></i> Women's Collection</a></li>
-                            <li><a href="products.php?gender=Kids"><i class="fas fa-chevron-right"></i> Kids Collection</a></li>
-                            <li><a href="orders.php"><i class="fas fa-chevron-right"></i> My Orders</a></li>
+                            <li><a href="products.php?category=Cargo Pant"><i class="fas fa-chevron-right"></i> Cargo Pant</a></li>
+                            <li><a href="products.php?category=Sweater"><i class="fas fa-chevron-right"></i> Sweater</a></li>
+                            <li><a href="products.php?category=Hoodie"><i class="fas fa-chevron-right"></i> Hoodie</a></li>
+                            <li><a href="products.php?category=Jacket"><i class="fas fa-chevron-right"></i> Jacket</a></li>
+                            <li><a href="products.php?category=Sweatshirt"><i class="fas fa-chevron-right"></i> Sweatshirt</a></li>
+                            <li><a href="products.php?category=Hat"><i class="fas fa-chevron-right"></i> Hat</a></li>
                         </ul>
                     </div>
 

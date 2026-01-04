@@ -359,23 +359,30 @@ if ($result) {
     <script src="../admin-js/admin-ui.js"></script>
     <script>
         function openCategoryModal() {
-            document.getElementById('categoryModal').style.display = 'block';
+            const modal = document.getElementById('categoryModal');
+            modal.classList.add('show');
+            modal.style.display = 'flex'; // Ensure flex is set for centering
+            
             document.getElementById('modalTitle').textContent = 'Add New Category';
             document.getElementById('categoryForm').reset();
             document.getElementById('categoryId').value = '';
         }
 
         function closeCategoryModal() {
-            document.getElementById('categoryModal').style.display = 'none';
+            const modal = document.getElementById('categoryModal');
+            modal.classList.remove('show');
+            modal.style.display = 'none';
         }
 
         function editCategory(category) {
-            document.getElementById('categoryModal').style.display = 'block';
+            const modal = document.getElementById('categoryModal');
+            modal.classList.add('show');
+            modal.style.display = 'flex'; // Ensure flex is set for centering
+            
             document.getElementById('modalTitle').textContent = 'Edit Category';
             document.getElementById('categoryId').value = category.id;
             document.getElementById('categoryName').value = category.name;
             document.getElementById('categoryDescription').value = category.description;
-            document.getElementById('categoryIcon').value = category.icon;
         }
 
         function confirmDeleteCategory(id) {

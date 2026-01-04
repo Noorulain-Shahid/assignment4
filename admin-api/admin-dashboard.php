@@ -93,9 +93,14 @@ for ($i = 6; $i >= 0; $i--) {
     }
 }
 
-// Fetch top products
+// Fetch top products (by sales quantity)
 $top_products = [];
-$query = "SELECT * FROM products LIMIT 5";
+$query = "SELECT p.*, COALESCE(SUM(oi.quantity), 0) as total_sold 
+          FROM products p 
+          LEFT JOIN order_items oi ON p.id = oi.product_id 
+          GROUP BY p.id 
+          ORDER BY total_sold DESC, p.name ASC 
+          LIMIT 5";
 $result = mysqli_query($conn, $query);
 if ($result) {
     while ($row = mysqli_fetch_assoc($result)) {
@@ -105,7 +110,7 @@ if ($result) {
 
 // Fetch Low Stock Products (uses stock_quantity from products table)
 $low_stock_products = [];
-$query = "SELECT * FROM products WHERE stock_quantity < 10 LIMIT 5";
+$query = "SELECT * FROM products WHERE stock_quantity < 10 AND is_active = 1 LIMIT 5";
 $result = mysqli_query($conn, $query);
 if ($result) {
     while ($row = mysqli_fetch_assoc($result)) {
@@ -283,7 +288,7 @@ if ($result) {
                                 <?php foreach($low_stock_products as $prod) { ?>
                                     <tr>
                                         <td><?php echo $prod['name']; ?></td>
-                                        <td><span class="status-badge warning"><?php echo $prod['stock']; ?></span></td>
+                                        <td><span class="status-badge warning"><?php echo $prod['stock_quantity']; ?></span></td>
                                         <td><a href="admin-products.php" class="btn-primary" style="padding: 5px 10px; font-size: 0.8rem; text-decoration: none;">Restock</a></td>
                                     </tr>
                                 <?php } ?>
@@ -311,7 +316,7 @@ if ($result) {
                                 </div>
                                 <div class="product-list-info">
                                     <h4><?php echo $product['name']; ?></h4>
-                                    <p>Rs <?php echo number_format($product['price'], 0); ?></p>
+                                    <p>Rs <?php echo number_format($product['price'], 0); ?> <span style="font-size: 0.8em; color: #888;">(<?php echo $product['total_sold']; ?> sold)</span></p>
                                 </div>
                             </div>
                             <?php } ?>

@@ -2,6 +2,55 @@
 require('auth_session.php');
 require('db_connect.php');
 
+// Handle Reply Submission
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    if (isset($_POST['submit_reply'])) {
+        $review_id = intval($_POST['review_id']);
+        $reply_text = trim($_POST['reply_text']);
+        
+        if ($review_id > 0 && !empty($reply_text)) {
+            $stmt = $conn->prepare("UPDATE reviews SET reply = ?, reply_date = NOW() WHERE id = ?");
+            $stmt->bind_param("si", $reply_text, $review_id);
+            
+            if ($stmt->execute()) {
+                $success_msg = "Reply submitted successfully.";
+            } else {
+                $error_msg = "Error submitting reply.";
+            }
+            $stmt->close();
+        }
+    } elseif (isset($_POST['edit_reply'])) {
+        $review_id = intval($_POST['review_id']);
+        $reply_text = trim($_POST['reply_text']);
+        
+        if ($review_id > 0 && !empty($reply_text)) {
+            $stmt = $conn->prepare("UPDATE reviews SET reply = ?, reply_date = NOW() WHERE id = ?");
+            $stmt->bind_param("si", $reply_text, $review_id);
+            
+            if ($stmt->execute()) {
+                $success_msg = "Reply updated successfully.";
+            } else {
+                $error_msg = "Error updating reply.";
+            }
+            $stmt->close();
+        }
+    } elseif (isset($_POST['delete_review'])) {
+        $review_id = intval($_POST['review_id']);
+        
+        if ($review_id > 0) {
+            $stmt = $conn->prepare("DELETE FROM reviews WHERE id = ?");
+            $stmt->bind_param("i", $review_id);
+            
+            if ($stmt->execute()) {
+                $success_msg = "Review deleted successfully.";
+            } else {
+                $error_msg = "Error deleting review.";
+            }
+            $stmt->close();
+        }
+    }
+}
+
 // This page now uses the reviews table as "feedback"
 
 // Fetch all product reviews with user names
@@ -304,8 +353,25 @@ if ($total_reviews > 0) {
                             </div>
                         </div>
                         <?php } ?>
-
-                        <!-- Admin actions (approve/reply/delete) disabled for simplified reviews -->
+                        
+                        <div class="review-actions" style="margin-top: 15px; border-top: 1px solid #eee; padding-top: 10px;">
+                            <?php if (empty($fb['reply'])) { ?>
+                            <button class="btn-action btn-reply" onclick="openReplyModal(<?php echo $fb['id']; ?>)">
+                                <i class="fas fa-reply"></i> Reply
+                            </button>
+                            <?php } else { ?>
+                            <button class="btn-action btn-edit" onclick="openEditModal(<?php echo $fb['id']; ?>, '<?php echo addslashes(htmlspecialchars($fb['reply'])); ?>')">
+                                <i class="fas fa-edit"></i> Edit Reply
+                            </button>
+                            <?php } ?>
+                            
+                            <form method="POST" action="" style="display:inline;" onsubmit="return confirm('Are you sure you want to delete this review?');">
+                                <input type="hidden" name="review_id" value="<?php echo $fb['id']; ?>">
+                                <button type="submit" name="delete_review" class="btn-action btn-delete">
+                                    <i class="fas fa-trash"></i> Delete
+                                </button>
+                            </form>
+                        </div>
                     </div>
                     <?php } ?>
                     <?php if (empty($feedbacks)) { ?>
@@ -316,8 +382,70 @@ if ($total_reviews > 0) {
         </div>
     </div>
 
-    <!-- Reply/Edit functionality removed for simplified read-only reviews -->
+    <!-- Reply Modal -->
+    <div id="replyModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeReplyModal()">&times;</span>
+            <h2>Reply to Review</h2>
+            <form method="POST" action="">
+                <input type="hidden" name="review_id" id="replyReviewId">
+                <div class="form-group">
+                    <label for="replyText">Your Reply:</label>
+                    <textarea name="reply_text" id="replyText" rows="4" required></textarea>
+                </div>
+                <button type="submit" name="submit_reply" class="btn-submit">Submit Reply</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Edit Modal -->
+    <div id="editModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeEditModal()">&times;</span>
+            <h2>Edit Reply</h2>
+            <form method="POST" action="">
+                <input type="hidden" name="review_id" id="editReviewId">
+                <div class="form-group">
+                    <label for="editReplyText">Reply Text:</label>
+                    <textarea name="reply_text" id="editReplyText" rows="4" required></textarea>
+                </div>
+                <button type="submit" name="edit_reply" class="btn-submit">Update Reply</button>
+            </form>
+        </div>
+    </div>
 
     <script src="../admin-js/admin-ui.js"></script>
+    <script>
+        function openReplyModal(reviewId) {
+            document.getElementById('replyReviewId').value = reviewId;
+            document.getElementById('replyModal').style.display = 'block';
+        }
+
+        function closeReplyModal() {
+            document.getElementById('replyModal').style.display = 'none';
+        }
+
+        function openEditModal(reviewId, text) {
+            document.getElementById('editReviewId').value = reviewId;
+            document.getElementById('editReplyText').value = text;
+            document.getElementById('editModal').style.display = 'block';
+        }
+
+        function closeEditModal() {
+            document.getElementById('editModal').style.display = 'none';
+        }
+
+        // Close modal when clicking outside
+        window.onclick = function(event) {
+            var replyModal = document.getElementById('replyModal');
+            var editModal = document.getElementById('editModal');
+            if (event.target == replyModal) {
+                replyModal.style.display = "none";
+            }
+            if (event.target == editModal) {
+                editModal.style.display = "none";
+            }
+        }
+    </script>
 </body>
 </html>

@@ -56,6 +56,33 @@ if (!empty($product['category_id'])) {
     }
     $relStmt->close();
 }
+
+// Fetch reviews
+$reviews = [];
+$avgRating = 0;
+$reviewCount = 0;
+
+$reviewsQuery = "
+    SELECT r.*, u.full_name 
+    FROM reviews r 
+    JOIN users u ON r.user_id = u.id 
+    WHERE r.product_id = ? 
+    ORDER BY r.created_at DESC
+";
+$reviewsStmt = $conn->prepare($reviewsQuery);
+$reviewsStmt->bind_param("i", $productId);
+$reviewsStmt->execute();
+$reviewsResult = $reviewsStmt->get_result();
+
+while ($row = $reviewsResult->fetch_assoc()) {
+    $reviews[] = $row;
+    $avgRating += $row['rating'];
+}
+$reviewCount = count($reviews);
+if ($reviewCount > 0) {
+    $avgRating = round($avgRating / $reviewCount, 1);
+}
+$reviewsStmt->close();
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -297,6 +324,67 @@ if (!empty($product['category_id'])) {
         </section>
     <?php endif; ?>
 
+    <!-- Reviews Section -->
+    <section class="reviews-section py-5 bg-light">
+        <div class="container">
+            <h2 class="section-title text-center mb-5">Customer Reviews</h2>
+            
+            <div class="row justify-content-center">
+                <div class="col-lg-8">
+                    <div class="card shadow-sm mb-4">
+                        <div class="card-body text-center">
+                            <h1 class="display-4 fw-bold"><?= $avgRating ?></h1>
+                            <div class="text-warning mb-2">
+                                <?php for($i=1; $i<=5; $i++): ?>
+                                    <i class="<?= $i <= $avgRating ? 'fas' : ($i - 0.5 <= $avgRating ? 'fas fa-star-half-alt' : 'far') ?> fa-star"></i>
+                                <?php endfor; ?>
+                            </div>
+                            <p class="text-muted">Based on <?= $reviewCount ?> review<?= $reviewCount != 1 ? 's' : '' ?></p>
+                        </div>
+                    </div>
+
+                    <?php if (empty($reviews)): ?>
+                        <div class="text-center py-4">
+                            <p class="text-muted">No reviews yet. Be the first to review this product!</p>
+                        </div>
+                    <?php else: ?>
+                        <div class="reviews-list">
+                            <?php foreach ($reviews as $review): ?>
+                                <div class="card shadow-sm mb-3">
+                                    <div class="card-body">
+                                        <div class="d-flex justify-content-between align-items-center mb-2">
+                                            <h6 class="mb-0"><?= htmlspecialchars($review['full_name']) ?></h6>
+                                            <small class="text-muted"><?= date('M j, Y', strtotime($review['created_at'])) ?></small>
+                                        </div>
+                                        <div class="text-warning mb-2">
+                                            <?php for($i=1; $i<=5; $i++): ?>
+                                                <i class="<?= $i <= $review['rating'] ? 'fas' : 'far' ?> fa-star"></i>
+                                            <?php endfor; ?>
+                                        </div>
+                                        <p class="mb-0"><?= nl2br(htmlspecialchars($review['review_text'])) ?></p>
+                                        
+                                        <?php if (!empty($review['reply'])): ?>
+                                            <div class="mt-3 p-3 bg-light rounded border-start border-4 border-primary">
+                                                <div class="d-flex align-items-center mb-1">
+                                                    <i class="fas fa-user-shield text-primary me-2"></i>
+                                                    <strong class="text-primary">Trendy Wear Response</strong>
+                                                </div>
+                                                <p class="mb-0 small text-muted"><?= nl2br(htmlspecialchars($review['reply'])) ?></p>
+                                                <small class="text-muted d-block mt-1" style="font-size: 0.75rem;">
+                                                    <?= date('M j, Y', strtotime($review['reply_date'])) ?>
+                                                </small>
+                                            </div>
+                                        <?php endif; ?>
+                                    </div>
+                                </div>
+                            <?php endforeach; ?>
+                        </div>
+                    <?php endif; ?>
+                </div>
+            </div>
+        </div>
+    </section>
+
     <!-- FOOTER -->
     <footer class="footer-section">
         <div class="container">
@@ -329,10 +417,12 @@ if (!empty($product['category_id'])) {
                     <div class="col-lg-3 col-md-6">
                         <h5 class="footer-title mb-4">Shop By</h5>
                         <ul class="footer-links list-unstyled">
-                            <li><a href="products.php?gender=Men"><i class="fas fa-chevron-right"></i> Men's Collection</a></li>
-                            <li><a href="products.php?gender=Women"><i class="fas fa-chevron-right"></i> Women's Collection</a></li>
-                            <li><a href="products.php?gender=Kids"><i class="fas fa-chevron-right"></i> Kids Collection</a></li>
-                            <li><a href="orders.php"><i class="fas fa-chevron-right"></i> My Orders</a></li>
+                            <li><a href="products.php?category=Cargo Pant"><i class="fas fa-chevron-right"></i> Cargo Pant</a></li>
+                            <li><a href="products.php?category=Sweater"><i class="fas fa-chevron-right"></i> Sweater</a></li>
+                            <li><a href="products.php?category=Hoodie"><i class="fas fa-chevron-right"></i> Hoodie</a></li>
+                            <li><a href="products.php?category=Jacket"><i class="fas fa-chevron-right"></i> Jacket</a></li>
+                            <li><a href="products.php?category=Sweatshirt"><i class="fas fa-chevron-right"></i> Sweatshirt</a></li>
+                            <li><a href="products.php?category=Hat"><i class="fas fa-chevron-right"></i> Hat</a></li>
                         </ul>
                     </div>
 

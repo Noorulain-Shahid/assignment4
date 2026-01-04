@@ -393,9 +393,7 @@ if ($result) {
         function closeStatusModal() {
             const modal = document.getElementById('statusModal');
             modal.classList.remove('show');
-            setTimeout(() => {
-                modal.style.display = 'none';
-            }, 300); // Match animation duration
+            modal.style.display = 'none';
         }
 
         function openAddOrderModal() {
@@ -407,9 +405,7 @@ if ($result) {
         function closeAddOrderModal() {
             const modal = document.getElementById('addOrderModal');
             modal.classList.remove('show');
-            setTimeout(() => {
-                modal.style.display = 'none';
-            }, 300); // Match animation duration
+            modal.style.display = 'none';
         }
 
         function filterOrders() {

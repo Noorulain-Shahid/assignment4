@@ -7,20 +7,16 @@ $message = "";
 $error = "";
 $db_error = "";
 
-// Fetch current admin user from admin_users (if table/row exists)
+// Fetch current admin user from admin_users
 $query = "SELECT *, full_name AS name FROM admin_users WHERE email='$email' AND is_active = 1 LIMIT 1";
 $result = mysqli_query($conn, $query);
-if ($result) {
+
+if ($result && mysqli_num_rows($result) > 0) {
     $user = mysqli_fetch_assoc($result);
 } else {
-    // If admin_users table/query fails (e.g., demo login only), fall back to session data
-    $db_error = mysqli_error($conn);
-    $user = [
-        'name' => isset($_SESSION['name']) ? $_SESSION['name'] : 'Administrator',
-        'email' => $email,
-        'password' => '',
-        'role' => isset($_SESSION['role']) ? $_SESSION['role'] : 'admin',
-    ];
+    // User not found in DB - force logout
+    header("Location: logout.php");
+    exit();
 }
 
 // Handle Profile Update

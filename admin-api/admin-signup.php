@@ -4,31 +4,40 @@ require('db_connect.php');
 $message = "";
 $error = "";
 
-if (isset($_REQUEST['name'])) {
-    $name = stripslashes($_REQUEST['name']);
-    $name = mysqli_real_escape_string($conn, $name);
-    $email = stripslashes($_REQUEST['email']);
-    $email = mysqli_real_escape_string($conn, $email);
-    $password = stripslashes($_REQUEST['password']);
-    $password = mysqli_real_escape_string($conn, $password);
-    $phone = stripslashes($_REQUEST['phone']);
-    $phone = mysqli_real_escape_string($conn, $phone);
+if (isset($_POST['email'])) {
+    $full_name = isset($_POST['name']) ? trim($_POST['name']) : '';
+    $username = isset($_POST['username']) ? trim($_POST['username']) : '';
+    $email = isset($_POST['email']) ? trim($_POST['email']) : '';
+    $password = isset($_POST['password']) ? trim($_POST['password']) : '';
 
-    // Check if email already exists
-    $check_query = "SELECT * FROM `users` WHERE email='$email'";
-    $check_result = mysqli_query($conn, $check_query);
-    
-    if (mysqli_num_rows($check_result) > 0) {
-        $error = "Email already exists!";
+    // Basic Validation
+    if (empty($full_name) || empty($username) || empty($email) || empty($password)) {
+        $error = "All fields are required.";
+    } elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+        $error = "Invalid email format.";
     } else {
-        $hashed_password = password_hash($password, PASSWORD_DEFAULT);
-        $query = "INSERT into `users` (name, email, password, phone, role)
-                  VALUES ('$name', '$email', '$hashed_password', '$phone', 'Administrator')";
-        $result = mysqli_query($conn, $query);
-        if ($result) {
-            $message = "You are registered successfully. <a href='admin-login.php'>Login here</a>";
+        // Sanitize
+        $full_name = mysqli_real_escape_string($conn, $full_name);
+        $username = mysqli_real_escape_string($conn, $username);
+        $email = mysqli_real_escape_string($conn, $email);
+        
+        // Check if email or username already exists in admin_users
+        $check_query = "SELECT id FROM `admin_users` WHERE email='$email' OR username='$username'";
+        $check_result = mysqli_query($conn, $check_query);
+        
+        if (mysqli_num_rows($check_result) > 0) {
+            $error = "Email or Username already exists!";
         } else {
-            $error = "Registration failed. Please try again.";
+            $hashed_password = password_hash($password, PASSWORD_DEFAULT);
+            // Default role is 'admin', is_active is 1
+            $query = "INSERT INTO `admin_users` (full_name, username, email, password, role, is_active)
+                      VALUES ('$full_name', '$username', '$email', '$hashed_password', 'admin', 1)";
+            
+            if (mysqli_query($conn, $query)) {
+                $message = "You are registered successfully. <a href='admin-login.php'>Login here</a>";
+            } else {
+                $error = "Registration failed: " . mysqli_error($conn);
+            }
         }
     }
 }
@@ -83,18 +92,18 @@ if (isset($_REQUEST['name'])) {
                     <input type="text" id="name" name="name" required placeholder="John Doe">
                 </div>
                 <div class="form-group">
+                    <label for="username">
+                        <i class="fas fa-user-tag"></i>
+                        Username
+                    </label>
+                    <input type="text" id="username" name="username" required placeholder="johndoe">
+                </div>
+                <div class="form-group">
                     <label for="email">
                         <i class="fas fa-envelope"></i>
                         Email Address
                     </label>
                     <input type="email" id="email" name="email" required placeholder="admin@ecommerce.com">
-                </div>
-                <div class="form-group">
-                    <label for="phone">
-                        <i class="fas fa-phone"></i>
-                        Phone Number
-                    </label>
-                    <input type="text" id="phone" name="phone" placeholder="+1234567890">
                 </div>
                 <div class="form-group">
                     <label for="password">

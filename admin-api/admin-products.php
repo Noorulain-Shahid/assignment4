@@ -194,11 +194,14 @@ if ($result) {
                 <?php } ?>
 
                 <!-- Action Bar -->
-                <div class="action-bar">
-                    <button class="btn-primary" onclick="openProductModal()">
+                <div class="action-bar" style="display: flex; justify-content: space-between; align-items: center;">
+                    <button class="btn-primary" onclick="openProductModal()" style="width: auto;">
                         <i class="fas fa-plus"></i>
                         Add New Product
                     </button>
+                    <div class="search-wrapper">
+                        <input type="text" id="productSearch" onkeyup="filterProducts()" placeholder="Search products..." style="padding: 10px; border: 1px solid #ddd; border-radius: 5px; width: 300px;">
+                    </div>
                 </div>
 
                 <!-- Products Table -->
@@ -312,18 +315,26 @@ if ($result) {
     <script src="../admin-js/admin-ui.js"></script>
     <script>
         function openProductModal() {
-            document.getElementById('productModal').style.display = 'block';
+            const modal = document.getElementById('productModal');
+            modal.classList.add('show');
+            modal.style.display = 'flex'; // Ensure flex is set for centering
+            
             document.getElementById('modalTitle').textContent = 'Add New Product';
             document.getElementById('productForm').reset();
             document.getElementById('productId').value = '';
         }
 
         function closeProductModal() {
-            document.getElementById('productModal').style.display = 'none';
+            const modal = document.getElementById('productModal');
+            modal.classList.remove('show');
+            modal.style.display = 'none';
         }
 
         function editProduct(product) {
-            document.getElementById('productModal').style.display = 'block';
+            const modal = document.getElementById('productModal');
+            modal.classList.add('show');
+            modal.style.display = 'flex'; // Ensure flex is set for centering
+            
             document.getElementById('modalTitle').textContent = 'Edit Product';
             document.getElementById('productId').value = product.id;
             document.getElementById('productName').value = product.name;
@@ -344,6 +355,29 @@ if ($result) {
             const modal = document.getElementById('productModal');
             if (event.target == modal) {
                 closeProductModal();
+            }
+        }
+
+        function filterProducts() {
+            var input = document.getElementById("productSearch");
+            var filter = input.value.toUpperCase();
+            var table = document.getElementById("productsTable");
+            var tr = table.getElementsByTagName("tr");
+
+            for (var i = 0; i < tr.length; i++) {
+                var tdName = tr[i].getElementsByTagName("td")[1]; // Product Name column
+                var tdCategory = tr[i].getElementsByTagName("td")[2]; // Category column
+                
+                if (tdName || tdCategory) {
+                    var txtValueName = tdName.textContent || tdName.innerText;
+                    var txtValueCategory = tdCategory.textContent || tdCategory.innerText;
+                    
+                    if (txtValueName.toUpperCase().indexOf(filter) > -1 || txtValueCategory.toUpperCase().indexOf(filter) > -1) {
+                        tr[i].style.display = "";
+                    } else {
+                        tr[i].style.display = "none";
+                    }
+                }
             }
         }
     </script>

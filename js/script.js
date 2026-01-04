@@ -1,6 +1,6 @@
 let cart = JSON.parse(localStorage.getItem('cart')) || [];
 
-const productsDB = {
+let productsDB = {
     1: { id: 1, name: 'Beanie Woolen Hat', price: 1050, image: 'images/winter hat girl.png', category: 'Accessories', description: 'A warm and stylish beanie cap to keep you cozy.' },
     2: { id: 2, name: 'Women\'s Hooded Trench Coat', price: 5000, image: 'images/red sweater for women.png', category: 'Outerwear', description: 'A stylish red trench coat with a hood for cold weather.' },
     3: { id: 3, name: 'Hat Scarf Set', price: 1520, image: 'images/winter hat black boy.png', category: 'Accessories', description: 'A matching set of a hat and scarf for a complete winter look.' },
@@ -16,6 +16,7 @@ const productsDB = {
 document.addEventListener('DOMContentLoaded', function() {
     updateCartCount();
     syncLocalCartToServer();
+    preloadProductsFromApi();
     
     document.querySelectorAll('a[href^="#"]').forEach(anchor => {
         anchor.addEventListener('click', function (e) {
@@ -48,6 +49,53 @@ document.addEventListener('DOMContentLoaded', function() {
     renderUserAvatarInNavbar();
     attachCartLinkZeroing();
 });
+
+async function preloadProductsFromApi() {
+    try {
+        const params = new URLSearchParams({ limit: 500 });
+        const response = await fetch('products_api.php?' + params.toString());
+        const data = await response.json();
+        if (data && data.success && Array.isArray(data.products)) {
+            window.allProducts = data.products;
+            const map = {};
+            data.products.forEach(p => { if (p && p.id) { map[p.id] = p; } });
+            productsDB = map;
+        }
+    } catch (err) {
+        console.warn('Product preload failed; using local seed data.', err);
+    }
+}
+
+async function getProductById(productId) {
+    if (!productId) return null;
+
+    if (window.allProducts && Array.isArray(window.allProducts)) {
+        const cached = window.allProducts.find(p => p && Number(p.id) === Number(productId));
+        if (cached) return cached;
+    }
+
+    if (productsDB && productsDB[productId]) {
+        return productsDB[productId];
+    }
+
+    try {
+        const response = await fetch(`products_api.php?id=${encodeURIComponent(productId)}&limit=1`);
+        const data = await response.json();
+        if (data && data.success && Array.isArray(data.products) && data.products.length) {
+            const product = data.products[0];
+            if (product && product.id) {
+                if (!window.allProducts) window.allProducts = [];
+                window.allProducts.push(product);
+                productsDB[product.id] = product;
+            }
+            return product;
+        }
+    } catch (err) {
+        console.warn('Lookup failed for product', productId, err);
+    }
+
+    return null;
+}
 
 function getStoredSession() {
     try {
@@ -286,18 +334,20 @@ function getInitialsDataUrl(name) {
 }
 
 async function addToCart(productId) {
-    const product = (window.allProducts && window.allProducts.find(p => p.id === productId)) || productsDB[productId];
+    let product = (window.allProducts && window.allProducts.find(p => Number(p.id) === Number(productId))) || productsDB[productId];
+
     if (!product) {
-        showNotification('Product not found!', 'error');
-        return;
+        product = await getProductById(productId);
     }
+
+    const productName = (product && product.name) ? product.name : 'Product';
 
     // Always try server cart first; fall back to local if unauthenticated or server fails
     try {
         const apiResult = await addToCartAPI(productId, 1, '', '');
         if (apiResult && apiResult.success) {
             await updateCartCount(true);
-            showNotification(`${product.name} added to cart!`, 'success');
+            showNotification(`${productName} added to cart!`, 'success');
             return;
         }
     } catch (err) {
@@ -306,20 +356,21 @@ async function addToCart(productId) {
 
     // Fallback for guest or server failure: local cart
     const existingItem = cart.find(item => item.id === productId);
+    const fallbackProduct = product || { id: productId, name: productName, price: 0, image: '' };
     if (existingItem) {
         existingItem.quantity++;
     } else {
         cart.push({
-            id: product.id,
-            name: product.name,
-            price: product.price,
-            image: product.image,
+            id: fallbackProduct.id,
+            name: fallbackProduct.name,
+            price: fallbackProduct.price,
+            image: fallbackProduct.image || fallbackProduct.image_url || '',
             quantity: 1
         });
     }
     localStorage.setItem('cart', JSON.stringify(cart));
     updateCartCount();
-    showNotification(`${product.name} added to cart!`, 'success');
+    showNotification(`${productName} added to cart!`, 'success');
 }
 
 async function updateCartCount(forceApi = false) {

@@ -10,7 +10,7 @@ $offset = ($page - 1) * $records_per_page;
 // Get total count from frontend users
 $total_customers = 0;
 $total_pages = 0;
-$total_query = "SELECT COUNT(*) as total FROM users WHERE is_active = 1";
+$total_query = "SELECT COUNT(*) as total FROM users";
 $total_result = mysqli_query($conn, $total_query);
 if ($total_result) {
     $total_row = mysqli_fetch_assoc($total_result);
@@ -21,12 +21,11 @@ if ($total_result) {
 // Fetch Users (Frontend Customers) with order count
 $customers = [];
 $query = "SELECT u.*, 
-          CONCAT(COALESCE(u.first_name, ''), ' ', COALESCE(u.last_name, '')) as display_name,
+          u.full_name as display_name,
           COUNT(DISTINCT o.id) as order_count,
           COALESCE(SUM(COALESCE(o.final_amount, o.total_amount, 0)), 0) as total_spent
           FROM users u 
           LEFT JOIN orders o ON u.id = o.user_id
-          WHERE u.is_active = 1 OR u.is_active IS NULL
           GROUP BY u.id
           ORDER BY u.created_at DESC
           LIMIT $offset, $records_per_page";
@@ -142,7 +141,7 @@ if ($result) {
                                     <td><?php echo htmlspecialchars($customer['display_name']); ?></td>
                                     <td><?php echo htmlspecialchars($customer['email']); ?></td>
                                     <td><?php echo htmlspecialchars($customer['phone'] ?: 'N/A'); ?></td>
-                                    <td><?php echo htmlspecialchars(($customer['city'] ? $customer['city'] . ', ' : '') . ($customer['state'] ?: 'N/A')); ?></td>
+                                    <td><?php echo htmlspecialchars(($customer['city'] ? $customer['city'] . ', ' : '') . ($customer['postal_code'] ?: 'N/A')); ?></td>
                                     <td><span class="badge badge-info"><?php echo $customer['order_count']; ?></span></td>
                                     <td><span class="badge badge-success">PKR <?php echo number_format($customer['total_spent'], 0); ?></span></td>
                                     <td><?php echo date('M j, Y', strtotime($customer['created_at'])); ?></td>

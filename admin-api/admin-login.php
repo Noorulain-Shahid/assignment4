@@ -14,44 +14,34 @@ if (isset($_POST['email'])) {
     $email = trim($_POST['email']);
     $password = trim($_POST['password']);
 
-    // 1) Simple, guaranteed demo login (bypasses database)
-    if ($email === 'admin@ecommerce.com' && $password === 'admin123') {
-        session_regenerate_id(true);
-        $_SESSION['email'] = 'admin@ecommerce.com';
-        $_SESSION['name'] = 'Administrator';
-        $_SESSION['role'] = 'super_admin';
-        $_SESSION['admin_id'] = 1;
-        $_SESSION['user_agent'] = $_SERVER['HTTP_USER_AGENT'];
-        $_SESSION['last_activity'] = time();
-
-        echo "<script>window.location.href='admin-dashboard.php';</script>";
-        exit();
-    }
-
-    // 2) Fallback: check real admin_users table (if you add more admins)
-    $email_esc = mysqli_real_escape_string($conn, $email);
-    $query = "SELECT * FROM `admin_users` WHERE email='$email_esc' AND is_active = 1";
-    $result = mysqli_query($conn, $query);
-
-    if ($result && mysqli_num_rows($result) === 1) {
-        $admin = mysqli_fetch_assoc($result);
-
-        if (password_verify($password, $admin['password'])) {
-            session_regenerate_id(true);
-            $_SESSION['email'] = $admin['email'];
-            $_SESSION['name'] = $admin['full_name'];
-            $_SESSION['role'] = $admin['role'];
-            $_SESSION['admin_id'] = $admin['id'];
-            $_SESSION['user_agent'] = $_SERVER['HTTP_USER_AGENT'];
-            $_SESSION['last_activity'] = time();
-
-            echo "<script>window.location.href='admin-dashboard.php';</script>";
-            exit();
-        } else {
-            $error_message = "Incorrect password.";
-        }
+    if (empty($email) || empty($password)) {
+        $error_message = "Please enter both email and password.";
     } else {
-        $error_message = "Admin user not found or inactive.";
+        // Check real admin_users table
+        $email_esc = mysqli_real_escape_string($conn, $email);
+        $query = "SELECT * FROM `admin_users` WHERE email='$email_esc' AND is_active = 1";
+        $result = mysqli_query($conn, $query);
+
+        if ($result && mysqli_num_rows($result) === 1) {
+            $admin = mysqli_fetch_assoc($result);
+
+            if (password_verify($password, $admin['password'])) {
+                session_regenerate_id(true);
+                $_SESSION['email'] = $admin['email'];
+                $_SESSION['name'] = $admin['full_name'];
+                $_SESSION['role'] = $admin['role'];
+                $_SESSION['admin_id'] = $admin['id'];
+                $_SESSION['user_agent'] = $_SERVER['HTTP_USER_AGENT'];
+                $_SESSION['last_activity'] = time();
+
+                echo "<script>window.location.href='admin-dashboard.php';</script>";
+                exit();
+            } else {
+                $error_message = "Incorrect password.";
+            }
+        } else {
+            $error_message = "Admin user not found or inactive.";
+        }
     }
 }
 ?>
@@ -100,7 +90,7 @@ if (isset($_POST['email'])) {
                         <i class="fas fa-envelope"></i>
                         Email Address
                     </label>
-                    <input type="email" id="email" name="email" required placeholder="admin@ecommerce.com">
+                    <input type="email" id="email" name="email" required placeholder="Enter your email">
                 </div>
                 <div class="form-group">
                     <label for="password">
@@ -132,13 +122,6 @@ if (isset($_POST['email'])) {
                     <p>Don't have an account? <a href="admin-signup.php">Sign Up</a></p>
                 </div>
             </form>
-            <div class="login-footer">
-                <p class="demo-credentials">
-                    <strong>Demo Credentials:</strong><br>
-                    Email: admin@ecommerce.com<br>
-                    Password: admin123
-                </p>
-            </div>
         </div>
     </div>
     <script>

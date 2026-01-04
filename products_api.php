@@ -9,9 +9,10 @@ require_once 'admin-api/db_connect.php';
 if ($_SERVER['REQUEST_METHOD'] === 'GET') {
     $category = $_GET['category'] ?? '';
     $search = $_GET['search'] ?? '';
-    $limit = isset($_GET['limit']) ? intval($_GET['limit']) : 12;
-    $page = isset($_GET['page']) ? intval($_GET['page']) : 1;
-    $offset = ($page - 1) * $limit;
+        $id = isset($_GET['id']) ? intval($_GET['id']) : 0;
+        $limit = isset($_GET['limit']) ? intval($_GET['limit']) : 12;
+        $page = isset($_GET['page']) ? intval($_GET['page']) : 1;
+        $offset = ($page - 1) * $limit;
     
     try {
         $whereClause = "WHERE p.is_active = 1";
@@ -30,6 +31,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
             $params[] = "%$search%";
             $types .= "ss";
         }
+            if ($id > 0) {
+                $whereClause .= " AND p.id = ?";
+                $params[] = $id;
+                $types .= "i";
+                $limit = 1;
+                $offset = 0;
+            }
         
         // Get products with category information
         $query = "SELECT p.*, c.name as category_name 

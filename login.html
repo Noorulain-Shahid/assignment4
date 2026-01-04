@@ -130,42 +130,76 @@
         </div>
     </section>
 <!-- FOOTER -->
-    <footer class="footer bg-dark text-white py-5">
+    <footer class="footer-section">
         <div class="container">
-            <div class="row g-4 footer-content">
-                <div class="col-lg-3 col-md-6 footer-section">
-                    <h3 class="h5 mb-3">About Trendy Wear</h3>
-                    <p class="text-white-50">Your destination for elegant and trendy fashion. We bring you the latest styles with premium quality.</p>
-                </div>
-                <div class="col-lg-3 col-md-6 footer-section">
-                    <h3 class="h5 mb-3">Quick Links</h3>
-                    <ul class="list-unstyled">
-                        <li class="mb-2"><a href="about.html" class="text-white-50 text-decoration-none">About Us</a></li>
-                        <li class="mb-2"><a href="contact.html" class="text-white-50 text-decoration-none">Contact Us</a></li>
-                    </ul>
-                </div>
-                <div class="col-lg-3 col-md-6 footer-section">
-                    <h3 class="h5 mb-3">Customer Service</h3>
-                    <ul class="list-unstyled">
-                        <li class="mb-2"><a href="#" class="text-white-50 text-decoration-none">Shipping Info</a></li>
-                        <li class="mb-2"><a href="#" class="text-white-50 text-decoration-none">Returns</a></li>
-                        <li class="mb-2"><a href="#" class="text-white-50 text-decoration-none">FAQ</a></li>
-                        <li class="mb-2"><a href="#" class="text-white-50 text-decoration-none">Size Guide</a></li>
-                    </ul>
-                </div>
-                <div class="col-lg-3 col-md-6 footer-section">
-                    <h3 class="h5 mb-3">Follow Us</h3>
-                    <div class="social-links d-flex gap-3">
-                        <a href="https://www.facebook.com" class="text-white fs-4"><i class="fab fa-facebook"></i></a>
-                        <a href="https://www.instagram.com" class="text-white fs-4"><i class="fab fa-instagram"></i></a>
-                        <a href="https://x.com" class="text-white fs-4"><i class="fab fa-twitter"></i></a>
-                        <a href="https://www.pinterest.com" class="text-white fs-4"><i class="fab fa-pinterest"></i></a>
+            <div class="footer-content py-5">
+                <div class="row g-4">
+                    <!-- Brand Column -->
+                    <div class="col-lg-4 col-md-6">
+                        <h5 class="footer-title mb-4">About Us</h5>
+                        <p class="footer-description mb-4">Your destination for trendy and affordable fashion. Discover your style, define your elegance.</p>
+                        <div class="social-links">
+                            <a href="#" class="social-icon" aria-label="Facebook"><i class="fab fa-facebook-f"></i></a>
+                            <a href="#" class="social-icon" aria-label="Instagram"><i class="fab fa-instagram"></i></a>
+                            <a href="#" class="social-icon" aria-label="Twitter"><i class="fab fa-twitter"></i></a>
+                            <a href="#" class="social-icon" aria-label="Pinterest"><i class="fab fa-pinterest-p"></i></a>
+                        </div>
+                    </div>
+
+                    <!-- Quick Links Column -->
+                    <div class="col-lg-2 col-md-6">
+                        <h5 class="footer-title mb-4">Quick Links</h5>
+                        <ul class="footer-links list-unstyled">
+                            <li><a href="index.php"><i class="fas fa-chevron-right"></i> Home</a></li>
+                            <li><a href="products.php"><i class="fas fa-chevron-right"></i> Products</a></li>
+                            <li><a href="about.html"><i class="fas fa-chevron-right"></i> About Us</a></li>
+                            <li><a href="contact.html"><i class="fas fa-chevron-right"></i> Contact</a></li>
+                        </ul>
+                    </div>
+
+                    <!-- Shop Categories Column -->
+                    <div class="col-lg-3 col-md-6">
+                        <h5 class="footer-title mb-4">Shop By</h5>
+                        <ul class="footer-links list-unstyled">
+                            <li><a href="products.php?category=Cargo Pant"><i class="fas fa-chevron-right"></i> Cargo Pant</a></li>
+                            <li><a href="products.php?category=Sweater"><i class="fas fa-chevron-right"></i> Sweater</a></li>
+                            <li><a href="products.php?category=Hoodie"><i class="fas fa-chevron-right"></i> Hoodie</a></li>
+                            <li><a href="products.php?category=Jacket"><i class="fas fa-chevron-right"></i> Jacket</a></li>
+                            <li><a href="products.php?category=Sweatshirt"><i class="fas fa-chevron-right"></i> Sweatshirt</a></li>
+                            <li><a href="products.php?category=Hat"><i class="fas fa-chevron-right"></i> Hat</a></li>
+                        </ul>
+                    </div>
+
+                    <!-- Contact Info Column -->
+                    <div class="col-lg-3 col-md-6">
+                        <h5 class="footer-title mb-4">Contact Info</h5>
+                        <ul class="footer-contact list-unstyled">
+                            <li>
+                                <i class="fas fa-map-marker-alt"></i>
+                                <span>123 Fashion Street<br>Style City, SC 12345</span>
+                            </li>
+                            <li>
+                                <i class="fas fa-phone"></i>
+                                <span>(123) 456-7890</span>
+                            </li>
+                            <li>
+                                <i class="fas fa-envelope"></i>
+                                <span>info@trendywear.com</span>
+                            </li>
+                            <li>
+                                <i class="fas fa-clock"></i>
+                                <span>Mon - Sat: 9AM - 8PM</span>
+                            </li>
+                        </ul>
                     </div>
                 </div>
             </div>
-            <hr class="my-4 bg-secondary">
-            <div class="footer-bottom text-center">
-                <p class="mb-0" style="color: var(--primary-beige);">&copy; 2025 Trendy Wear. All rights reserved.</p>
+
+            <!-- Footer Bottom -->
+            <div class="footer-bottom py-4">
+                <div class="text-center">
+                    <p class="mb-0">&copy; 2026 <strong>Trendy Wear</strong>. All rights reserved.</p>
+                </div>
             </div>
         </div>
     </footer>

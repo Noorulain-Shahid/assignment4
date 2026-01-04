@@ -174,7 +174,7 @@ if ($categoriesResult->num_rows > 0) {
                                         </div>
                                         <div class="col-md-1">
                                             <button class="btn btn-sm btn-outline-primary" 
-                                                    onclick="toggleOrderDetails(<?= $order['id'] ?>)">
+                                                    onclick="toggleOrderDetails(<?= $order['id'] ?>, '<?= $order['status'] ?>')">
                                                 <i class="fas fa-chevron-down" id="icon-<?= $order['id'] ?>"></i>
                                             </button>
                                         </div>
@@ -292,10 +292,12 @@ if ($categoriesResult->num_rows > 0) {
                     <div class="col-lg-3 col-md-6">
                         <h5 class="footer-title mb-4">Shop By</h5>
                         <ul class="footer-links list-unstyled">
-                            <li><a href="products.php?gender=Men"><i class="fas fa-chevron-right"></i> Men's Collection</a></li>
-                            <li><a href="products.php?gender=Women"><i class="fas fa-chevron-right"></i> Women's Collection</a></li>
-                            <li><a href="products.php?gender=Kids"><i class="fas fa-chevron-right"></i> Kids Collection</a></li>
-                            <li><a href="orders.php"><i class="fas fa-chevron-right"></i> My Orders</a></li>
+                            <li><a href="products.php?category=Cargo Pant"><i class="fas fa-chevron-right"></i> Cargo Pant</a></li>
+                            <li><a href="products.php?category=Sweater"><i class="fas fa-chevron-right"></i> Sweater</a></li>
+                            <li><a href="products.php?category=Hoodie"><i class="fas fa-chevron-right"></i> Hoodie</a></li>
+                            <li><a href="products.php?category=Jacket"><i class="fas fa-chevron-right"></i> Jacket</a></li>
+                            <li><a href="products.php?category=Sweatshirt"><i class="fas fa-chevron-right"></i> Sweatshirt</a></li>
+                            <li><a href="products.php?category=Hat"><i class="fas fa-chevron-right"></i> Hat</a></li>
                         </ul>
                     </div>
 
@@ -333,13 +335,50 @@ if ($categoriesResult->num_rows > 0) {
         </div>
     </footer>
 
+    <!-- Review Modal -->
+    <div class="modal fade" id="reviewModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Write a Review</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="reviewForm">
+                        <input type="hidden" id="reviewProductId">
+                        <input type="hidden" id="reviewOrderId">
+                        <div class="mb-3 text-center">
+                            <label class="form-label d-block">Rating</label>
+                            <div class="rating-stars" style="font-size: 2rem; color: #ffc107; cursor: pointer;">
+                                <i class="far fa-star" data-rating="1" onclick="setRating(1)"></i>
+                                <i class="far fa-star" data-rating="2" onclick="setRating(2)"></i>
+                                <i class="far fa-star" data-rating="3" onclick="setRating(3)"></i>
+                                <i class="far fa-star" data-rating="4" onclick="setRating(4)"></i>
+                                <i class="far fa-star" data-rating="5" onclick="setRating(5)"></i>
+                            </div>
+                            <input type="hidden" id="reviewRating" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="reviewComment" class="form-label">Your Review</label>
+                            <textarea class="form-control" id="reviewComment" rows="4" required placeholder="Share your experience with this product..."></textarea>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" onclick="submitReview()">Submit Review</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
     <script>
         // Update cart count on page load
         updateCartCount();
         
         // Toggle order details
-        function toggleOrderDetails(orderId) {
+        function toggleOrderDetails(orderId, status) {
             const orderDetails = document.getElementById(`order-${orderId}`);
             const icon = document.getElementById(`icon-${orderId}`);
             const itemsContainer = document.getElementById(`items-${orderId}`);
@@ -355,13 +394,13 @@ if ($categoriesResult->num_rows > 0) {
                 
                 // Load order items if not already loaded
                 if (!itemsContainer.dataset.loaded) {
-                    loadOrderItems(orderId);
+                    loadOrderItems(orderId, status);
                 }
             }
         }
         
         // Load order items via AJAX
-        async function loadOrderItems(orderId) {
+        async function loadOrderItems(orderId, status) {
             const itemsContainer = document.getElementById(`items-${orderId}`);
             
             try {
@@ -371,6 +410,16 @@ if ($categoriesResult->num_rows > 0) {
                 if (data.success) {
                     let itemsHtml = '';
                     data.items.forEach(item => {
+                        let reviewBtn = '';
+                        if (status === 'delivered') {
+                            reviewBtn = `
+                                <button class="btn btn-sm btn-outline-warning mt-2" 
+                                        onclick="openReviewModal(${item.product_id}, ${orderId})">
+                                    <i class="fas fa-star"></i> Leave Feedback
+                                </button>
+                            `;
+                        }
+
                         itemsHtml += `
                             <div class="d-flex align-items-center mb-2 pb-2 border-bottom">
                                 <img src="${item.image_url}" class="rounded me-3" style="width: 50px; height: 50px; object-fit: cover;">
@@ -381,6 +430,7 @@ if ($categoriesResult->num_rows > 0) {
                                         ${item.size ? ` | Size: ${item.size}` : ''}
                                         ${item.color ? ` | Color: ${item.color}` : ''}
                                     </small>
+                                    ${reviewBtn}
                                 </div>
                                 <div class="text-end">
                                     <small class="text-muted">PKR ${parseFloat(item.price).toFixed(0)} each</small><br>
@@ -397,6 +447,76 @@ if ($categoriesResult->num_rows > 0) {
             } catch (error) {
                 console.error('Error loading order items:', error);
                 itemsContainer.innerHTML = '<div class="text-danger">Error loading items</div>';
+            }
+        }
+
+        // Review functions
+        let reviewModal;
+        
+        function openReviewModal(productId, orderId) {
+            document.getElementById('reviewProductId').value = productId;
+            document.getElementById('reviewOrderId').value = orderId;
+            document.getElementById('reviewRating').value = '';
+            document.getElementById('reviewComment').value = '';
+            setRating(0); // Reset stars
+            
+            if (!reviewModal) {
+                reviewModal = new bootstrap.Modal(document.getElementById('reviewModal'));
+            }
+            reviewModal.show();
+        }
+
+        function setRating(rating) {
+            document.getElementById('reviewRating').value = rating;
+            const stars = document.querySelectorAll('.rating-stars i');
+            stars.forEach((star, index) => {
+                if (index < rating) {
+                    star.classList.remove('far');
+                    star.classList.add('fas');
+                } else {
+                    star.classList.remove('fas');
+                    star.classList.add('far');
+                }
+            });
+        }
+
+        async function submitReview() {
+            const productId = document.getElementById('reviewProductId').value;
+            const orderId = document.getElementById('reviewOrderId').value;
+            const rating = document.getElementById('reviewRating').value;
+            const comment = document.getElementById('reviewComment').value;
+
+            if (!rating) {
+                alert('Please select a rating');
+                return;
+            }
+            if (!comment) {
+                alert('Please write a comment');
+                return;
+            }
+
+            try {
+                const response = await fetch('submit_review.php', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        product_id: productId,
+                        order_id: orderId,
+                        rating: rating,
+                        comment: comment
+                    })
+                });
+
+                const data = await response.json();
+                if (data.success) {
+                    alert('Review submitted successfully!');
+                    reviewModal.hide();
+                } else {
+                    alert(data.message || 'Error submitting review');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Error submitting review');
             }
         }
         
