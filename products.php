@@ -28,10 +28,14 @@ if (!empty($gender)) {
 }
 
 if (!empty($search)) {
-    $whereClause .= " AND (p.name LIKE ? OR p.description LIKE ?)";
-    $params[] = "%$search%";
-    $params[] = "%$search%";
-    $types .= "ss";
+    // Use REGEXP with word boundaries to avoid partial matches (e.g. "hat" matching "that")
+    // Using start-of-word boundary [[:<:]] allows "hat" to match "hats"
+    $searchPattern = '[[:<:]]' . $search;
+    $whereClause .= " AND (p.name REGEXP ? OR p.description REGEXP ? OR c.name REGEXP ?)";
+    $params[] = $searchPattern;
+    $params[] = $searchPattern;
+    $params[] = $searchPattern;
+    $types .= "sss";
 }
 
 // Get products

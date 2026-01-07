@@ -150,6 +150,10 @@ $reviewsStmt->close();
                     <?php endif; ?>
                 </ul>
             </div>
+            
+            <div class="menu-arrow-container">
+                <i class="fas fa-chevron-down menu-arrow"></i>
+            </div>
         </div>
     </nav>
 

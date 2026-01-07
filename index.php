@@ -52,6 +52,25 @@ if ($hatResult && $hatRow = $hatResult->fetch_assoc()) {
     }
 }
 
+// Add one sweatshirt to featured products if not already present
+$sweatshirtQuery = "SELECT p.* FROM products p 
+             JOIN categories c ON p.category_id = c.id 
+             WHERE p.is_active = 1 AND c.name = 'Sweatshirt' 
+             LIMIT 1";
+$sweatshirtResult = $conn->query($sweatshirtQuery);
+if ($sweatshirtResult && $ssRow = $sweatshirtResult->fetch_assoc()) {
+    $isDuplicate = false;
+    foreach ($featuredProducts as $fp) {
+        if ($fp['id'] == $ssRow['id']) {
+            $isDuplicate = true;
+            break;
+        }
+    }
+    if (!$isDuplicate) {
+        $featuredProducts[] = $ssRow;
+    }
+}
+
 // Get categories
 $categories = [];
 $categoriesError = null;
@@ -156,47 +175,7 @@ if ($categoriesResult) {
         </div>
     </section>
 
-    <!-- CATEGORIES SECTION -->
-    <section class="categories-section py-5 bg-light">
-        <div class="container">
-            <h2 class="section-title text-center mb-5">Shop By Category</h2>
-            <div class="row g-4 justify-content-center">
-                <div class="col-lg-4 col-md-6">
-                    <a href="products.php?gender=Men" class="category-card text-decoration-none">
-                        <div class="card h-100 border-0 shadow-sm hover-lift">
-                            <img src="images/black sweat shirt for men.png" class="card-img-top" alt="Men">
-                            <div class="card-body text-center">
-                                <h4 class="card-title mb-2">Men</h4>
-                                <p class="text-muted">Explore our latest men's collection.</p>
-                            </div>
-                        </div>
-                    </a>
-                </div>
-                <div class="col-lg-4 col-md-6">
-                    <a href="products.php?gender=Women" class="category-card text-decoration-none">
-                        <div class="card h-100 border-0 shadow-sm hover-lift">
-                            <img src="images/red sweater for women.png" class="card-img-top" alt="Women">
-                            <div class="card-body text-center">
-                                <h4 class="card-title mb-2">Women</h4>
-                                <p class="text-muted">Discover elegant styles for women.</p>
-                            </div>
-                        </div>
-                    </a>
-                </div>
-                <div class="col-lg-4 col-md-6">
-                    <a href="products.php?gender=Kids" class="category-card text-decoration-none">
-                        <div class="card h-100 border-0 shadow-sm hover-lift">
-                            <img src="images/skin color sweater for kids.png" class="card-img-top" alt="Kids">
-                            <div class="card-body text-center">
-                                <h4 class="card-title mb-2">Kids</h4>
-                                <p class="text-muted">Fun and comfy outfits for kids.</p>
-                            </div>
-                        </div>
-                    </a>
-                </div>
-            </div>
-        </div>
-    </section>
+
 
     <!-- FEATURED PRODUCTS SECTION WITH SLIDER -->
     <section class="featured-products featured-section py-5">
