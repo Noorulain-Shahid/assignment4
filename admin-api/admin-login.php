@@ -50,12 +50,9 @@ if (isset($_POST['email'])) {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin Login - E-Commerce Admin Panel</title>
-    <link rel="icon" type="image/png" href="images/favicon.png">
-    <link rel="stylesheet" href="css/admin-style.css">
-        <title>Admin Login - Trendy Wear</title>
-        <link rel="icon" type="image/png" href="../images/favicon.png">
-        <link rel="stylesheet" href="../admin-css/admin-style.css">
+    <title>Admin Login - Trendy Wear</title>
+    <link rel="icon" type="image/png" href="../images/favicon.png">
+    <link rel="stylesheet" href="../admin-css/admin-style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         .error-message {
@@ -110,7 +107,7 @@ if (isset($_POST['email'])) {
                 </div>
                 
                 <?php if($error_message != "") { ?>
-                    <div class="error-message"><?php echo $error_message; ?></div>
+                    <div class="error-message show"><?php echo $error_message; ?></div>
                 <?php } ?>
 
                 <button type="submit" class="btn-primary">
